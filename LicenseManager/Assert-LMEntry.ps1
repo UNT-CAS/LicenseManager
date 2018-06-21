@@ -48,30 +48,30 @@ function Assert-LMEntry {
     Write-Verbose "[Assert-LMEntry] Unbound Parameters: $($MyInvocation.UnboundParameters | Out-String)"
 
     [IO.FileInfo] $jsonFilePath = "$($LicenseManager.DirectoryPath)\${ProcessName}.json"
-    Write-Verbose "[Asset-LMEntry] JSON File: ${jsonFilePath}")
+    Write-Verbose "[Asset-LMEntry] JSON File: ${jsonFilePath}"
     
     if (-not (Test-Path $jsonFilePath)) {
-        Write-Verbose "[Asset-LMEntry] JSON file doesn't exist, so there are no entries. I guess we're allowed!")
+        Write-Verbose "[Asset-LMEntry] JSON file doesn't exist, so there are no entries. I guess we're allowed!"
         return $true
     }
 
     $jsonInfo = Get-Content -LiteralPath $jsonFilePath | Out-String | ConvertFrom-Json
     $jsonInfoCount = ($jsonInfo | Measure-Object).Count
     $ProcessConcurrentMax = $LicenseManager.Processes.$ProcessName
-    Write-Verbose "[Asset-LMEntry] JSON Info Count: ${jsonInfoCount}")
-    Write-Verbose "[Asset-LMEntry] Process Concurrent Max: ${ProcessConcurrentMax}")
+    Write-Verbose "[Asset-LMEntry] JSON Info Count: ${jsonInfoCount}"
+    Write-Verbose "[Asset-LMEntry] Process Concurrent Max: ${ProcessConcurrentMax}"
     if ($jsonInfoCount -lt $ProcessConcurrentMax) {
-        Write-Verbose "[Asset-LMEntry] JSON Info Count is LESS THAN the Process Concurrent Max. I guess we're allowed!")
+        Write-Verbose "[Asset-LMEntry] JSON Info Count is LESS THAN the Process Concurrent Max. I guess we're allowed!"
         return $true
     }
 
-    $relevantJsonInfo = $jsonInfo | Where-Object { ($currentJsonInfo.ComputerName -eq $env:COMPUTERNAME) -and ($currentJsonInfo.UserName -eq $ProcessUserName)
-    Write-Verbose "[Asset-LMEntry] Relevant JSON Info: $($relevantJsonInfo | Out-String)")
+    $relevantJsonInfo = $jsonInfo | Where-Object { ($currentJsonInfo.ComputerName -eq $env:COMPUTERNAME) -and ($currentJsonInfo.UserName -eq $ProcessUserName) }
+    Write-Verbose "[Asset-LMEntry] Relevant JSON Info: $($relevantJsonInfo | Out-String)"
     if ($relevantJsonInfo) {
-        Write-Verbose "[Asset-LMEntry] Found Relvant JSON Info. I guess we're allowed!")
+        Write-Verbose "[Asset-LMEntry] Found Relvant JSON Info. I guess we're allowed!"
         return $true
     }
 
-    Write-Verbose "[Asset-LMEntry] NO CONDITIONS PASSED. I guess we're NOT allowed!")
+    Write-Verbose "[Asset-LMEntry] NO CONDITIONS PASSED. I guess we're NOT allowed!"
     return $false
 }

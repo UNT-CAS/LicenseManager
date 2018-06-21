@@ -3,7 +3,7 @@ Manage concurrent usage of software that doesn't use a smarter license server, s
 # Description
 
 We have several pieces of software that don't use a license server.
-Because of this, we own *n* number of stand-alone license.
+Because of this, we own *n* number of stand-alone licenses.
 When applicable, we can install this on as many computers as we want, such as in a VDI farm, and make it availble as long as we can control concurrency.
 This is an attempt to control concurrency in these situations.
 

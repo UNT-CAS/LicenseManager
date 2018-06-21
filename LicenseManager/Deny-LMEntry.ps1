@@ -48,6 +48,27 @@ function Deny-LMEntry {
     Write-Verbose "[Deny-LMEntry] Bound Parameters: $($MyInvocation.BoundParameters | Out-String)"
     Write-Verbose "[Deny-LMEntry] Unbound Parameters: $($MyInvocation.UnboundParameters | Out-String)"
 
+    <#
+        .Synopsis
+
+            Run a command as another user on the system.
+
+        .Parameter User
+
+            The user to run the command as.
+
+        .Parameter Command
+
+            The command to run.
+
+        .Parameter IsVBSript
+
+            If the command passed it VBScript, specify this switch. Otherwise, PowerShell is assumed.
+
+        .Parameter Wait
+
+            Wait for command to finish running before continuing. Even if this isn't set, we will wait until the command starts before continuing.
+    #>
     function private:Invoke-AsUser {
         [CmdletBinding()]
         [OutputType([void])]
@@ -58,78 +79,122 @@ function Deny-LMEntry {
             
             [Parameter(Mandatory = $true)]
             [string]
-            $Command
-        )
-        $sch_name = 'DSC untcasWallpaper UpdatePerUserSystemParameters'
+            $Command,
 
-        $encodedCommand = [Convert]::ToBase64String([System.Text.Encoding]::Unicode.GetBytes($command))
-        $vbscript = @'
+            [Parameter()]
+            [switch]
+            $IsVBScript,
+
+            [Parameter()]
+            [switch]
+            $Wait
+        )
+        Write-Verbose "[Deny-LMEntry][Invoke-AsUser] Bound Parameters: $($MyInvocation.BoundParameters | Out-String)"
+        Write-Verbose "[Deny-LMEntry][Invoke-AsUser] Unbound Parameters: $($MyInvocation.UnboundParameters | Out-String)"
+        $scheduledTaskName = "LicenseManager-$(New-Guid)"
+
+        if ($IsVBScript.IsPresent) {
+            $vbscript = $Command
+        } else {
+            $encodedCommand = [Convert]::ToBase64String([System.Text.Encoding]::Unicode.GetBytes($command))
+            $vbscript = @'
 Dim objShell
 Set objShell = WScript.CreateObject("WScript.Shell")
 objShell.Run """{0}"" {1}", 0
 '@
-        $vbscript = $vbscript -f @(
-            (Get-Command 'powershell').Source,
-            "-NonInteractive -ExecutionPolicy ByPass -EncodedCommand ${encodedCommand}"
-        )
-
-        $vbscript_file = "${env:SystemRoot}\Debug\$((New-Guid).Guid).vbs"
-        Write-Verbose "[Deny-LMEntry][Invoke-AsUser] (Set) Writing VBS (${vbscript_file}): $($vbscript | Out-String)"
-        $vbscript | Out-File -Encoding 'ascii' $vbscript_file -Force
-
-        $New_ScheduledTaskAction = @{
-            'Execute'  = (Get-Command 'wscript').Source;
-            'Argument' = "//NoLogo //E:vbscript ${vbscript_file}";
+            $vbscript = $vbscript -f @(
+                (Get-Command 'powershell').Source,
+                "-NonInteractive -ExecutionPolicy ByPass -EncodedCommand ${encodedCommand}"
+            )
         }
-        Write-Verbose "[Deny-LMEntry][Invoke-AsUser] (Set) New-ScheduledTaskAction: $($New_ScheduledTaskAction | Out-String)"
 
-        $New_ScheduledTask = @{
-            'Action'    = (New-ScheduledTaskAction @New_ScheduledTaskAction);
+        $vbscriptFile = New-TemporaryFile
+        Write-Verbose "[Deny-LMEntry][Invoke-AsUser] (Set) Writing VBS (${vbscriptFile}): $($vbscript | Out-String)"
+        $vbscript | Out-File -Encoding 'ascii' $vbscriptFile -Force
+
+        $newScheduledTaskAction = @{
+            'Execute'  = (Get-Command 'wscript').Source;
+            'Argument' = "//NoLogo //E:vbscript ${vbscriptFile}";
+        }
+        Write-Verbose "[Deny-LMEntry][Invoke-AsUser] (Set) New-ScheduledTaskAction: $($newScheduledTaskAction | Out-String)"
+
+        $newScheduledTask = @{
+            'Action'    = (New-ScheduledTaskAction @newScheduledTaskAction);
             'Principal' = (New-ScheduledTaskPrincipal -UserId $user);
             'Settings'  = (New-ScheduledTaskSettingsSet -Hidden);
             'Trigger'   = (New-ScheduledTaskTrigger -AtLogOn);
         }
-        Write-Verbose "[Deny-LMEntry][Invoke-AsUser] (Set) New-ScheduledTask: $($New_ScheduledTask | Out-String)"
+        Write-Verbose "[Deny-LMEntry][Invoke-AsUser] (Set) New-ScheduledTask: $($newScheduledTask | Out-String)"
 
-        $Register_ScheduledTask = @{
-            'TaskName'    = $sch_name;
-            'InputObject' = (New-ScheduledTask @New_ScheduledTask);
+        $registerScheduledTask = @{
+            'TaskName'    = $scheduledTaskName;
+            'InputObject' = (New-ScheduledTask @newScheduledTask);
         }
-        Write-Verbose "[Deny-LMEntry][Invoke-AsUser] (Set) Register-ScheduledTask: $($Register_ScheduledTask | Out-String)"
-        Register-ScheduledTask @Register_ScheduledTask | Out-String | Write-Verbose
+        Write-Verbose "[Deny-LMEntry][Invoke-AsUser] (Set) Register-ScheduledTask: $($registerScheduledTask | Out-String)"
+        Register-ScheduledTask @registerScheduledTask | Out-String | Write-Verbose
 
-        Write-Verbose "[Deny-LMEntry][Invoke-AsUser] (Set) Start-ScheduledTask: ${sch_name}"
-        Start-ScheduledTask -TaskName $sch_name | Out-String | Write-Verbose
+        Write-Verbose "[Deny-LMEntry][Invoke-AsUser] (Set) Start-ScheduledTask: ${scheduledTaskName}"
+        Start-ScheduledTask -TaskName $scheduledTaskName | Out-String | Write-Verbose
 
-         For ($i = 100; $i -le 10000; $i + 100) {
-            $ScheduledTaskInfo = Get-ScheduledTaskInfo -TaskName $sch_name
-            Write-Verbose "[Deny-LMEntry][Invoke-AsUser] (Set) Waiting for ScheduledTask to Run; Last Task Result: [$($ScheduledTaskInfo.LastRunTime)] $($ScheduledTaskInfo.LastTaskResult)"
-            if ($ScheduledTaskInfo.LastTaskResult -eq 267011) {
-                Write-Verbose "[Deny-LMEntry][Invoke-AsUser] (Set) $($ScheduledTaskInfo.LastTaskResult): ScheduledTask *likely* hasn't run yet."
+        
+        for ($i = 100; $i -le 10000; $i + 100) {
+            $scheduledTaskInfo = Get-ScheduledTaskInfo -TaskName $scheduledTaskName
+            Write-Verbose "[Deny-LMEntry][Invoke-AsUser] (Set) Waiting for ScheduledTask to Run; Last Task Result: [$($scheduledTaskInfo.LastRunTime)] $($scheduledTaskInfo.LastTaskResult)"
+            if ($scheduledTaskInfo.LastTaskResult -eq 267011) {
+                Write-Verbose "[Deny-LMEntry][Invoke-AsUser] (Set) $($scheduledTaskInfo.LastTaskResult): ScheduledTask *likely* hasn't run yet."
+            } elseif ($scheduledTaskInfo.LastTaskResult -eq 267009) {
+                Write-Verbose "[Deny-LMEntry][Invoke-AsUser] (Set) $($scheduledTaskInfo.LastTaskResult): ScheduledTask *likely* is running."
+                if (-not $Wait.IsPresent) {
+                    break
+                }
             }
-            elseif ($ScheduledTaskInfo.LastTaskResult -eq 267009) {
-                Write-Verbose "[Deny-LMEntry][Invoke-AsUser] (Set) $($ScheduledTaskInfo.LastTaskResult): ScheduledTask *likely* is running."
-            }
-            if ($ScheduledTaskInfo.LastTaskResult -eq 0) {
+            
+            if ($scheduledTaskInfo.LastTaskResult -eq 0) {
                 break
-            }
-            else {
+            } else {
                 Start-Sleep -Milliseconds $i
             }
         }
-        Unregister-ScheduledTask -TaskName $sch_name -Confirm:$false
-        Remove-Item $vbscript_file -Force
-    }
 
-    $blocked_app_vbs = @'
+        Unregister-ScheduledTask -TaskName $scheduledTaskName -Confirm:$false
+        Remove-Item $vbscriptFile -Force
+    } #/function private:Invoke-AsUser
+
+    [IO.FileInfo] $jsonFilePath = "$($LicenseManager.DirectoryPath)\${ProcessName}.json"
+    Write-Verbose "[Deny-LMEntry] JSON File: ${jsonFilePath}"
+    
+    $ProcessConcurrentMax = $LicenseManager.Processes.$ProcessName
+    Write-Verbose "[Deny-LMEntry] Process Concurrent Max: ${ProcessConcurrentMax}"
+    
+    $blockedAppMessage = @'
+Timestamp: {0}
+
+The application you are trying to access ({1}) has exceeded it's maximum concurency of {2}. Please try again later.
+
+If you feel like this message is an error, please contact your IT department.
+'@
+
+    $blockedAppVBS = @'
 Dim wshShell: Set wshShell = WScript.CreateObject("WScript.Shell")
 WshShell.Popup "{0}", {1}, "{2}", {3}
 '@ -f @(
-        ($PopupTextStandard.Replace([System.Environment]::NewLine, '"& vbCrLf &"') -f @($PopupTextReason.Replace([System.Environment]::NewLine, '"& vbCrLf &"'), '{0}')),
-        $PopupSecondsToWait,
-        $PopupTitle,
-        $PopupType
+        $blockedAppMessage.Replace([System.Environment]::NewLine, '"& vbCrLf &"') -f @(
+            (Get-Date).DateTime,
+            $ProcessName,
+            $ProcessConcurrentMax
+        ),
+        0,
+        "License Manager: ${ProcessName}",
+        16
     )
+    Write-Verbose "[Deny-LMEntry] Blocked App VBS:`n$($blockedAppVBS | Out-String)"
+    
+    Write-Verbose "[Deny-LMEntry] Notifying User ..."
+    Invoke-AsUser -User $ProcessUserName -Command $blockedAppVBS -IsVBScript
+
+    $process = Get-Process -Id $ProcessId -IncludeUserName
+    Write-Verbose "[Deny-LMEntry] Stopping Process: ${ProcessId} ${process} $($process.Username)"
+    $process | Stop-Process -Force
 }
 
 

@@ -3,6 +3,7 @@
     .Synopsis
 
         This is the MAIN script. This script watches for events and sends found events to Invoke-LMEvent for handling.
+
     .Parameter LicenseManager
         
         A JSON hashtable of processes to concurrency maximum.
