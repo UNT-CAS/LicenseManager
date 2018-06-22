@@ -21,7 +21,7 @@
 
 #>
 function Initialize-LMEntry {
-    [CmdleBinding()]
+    [CmdletBinding()]
     [OutputType([void])]
     param(
         [Parameter(Mandatory = $true)]
@@ -34,6 +34,11 @@ function Initialize-LMEntry {
     )
     Write-Verbose "[Initialize-LMEntry] Bound Parameters: $($MyInvocation.BoundParameters | Out-String)"
     Write-Verbose "[Initialize-LMEntry] Unbound Parameters: $($MyInvocation.UnboundParameters | Out-String)"
+    
+    . "${PSScriptRoot}\Add-LMEntry.ps1"
+
+    Write-Verbose "[Initialize-LMEntry] Ensure LicenseManager DirectoryPath Exists: $($LicenseManager.DirectoryPath)"
+    New-Item -ItemType Directory -Path $LicenseManager.DirectoryPath -Force | Write-Verbose
 
     Write-Verbose "[Initialize-LMEntry] ProcessName: ${ProcessName}"
 

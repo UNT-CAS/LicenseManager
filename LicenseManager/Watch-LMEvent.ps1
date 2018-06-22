@@ -33,7 +33,7 @@ Write-Verbose "[Watch-LMEvent] Bound Parameters: $($MyInvocation.BoundParameters
 Write-Verbose "[Watch-LMEvent] Unbound Parameters: $($MyInvocation.UnboundParameters | Out-String)"
 
 if (-not $LicenseManager) {
-    Throw [System.Management.Automation.ParameterBindingException] ''
+    Throw [System.Management.Automation.ParameterBindingException] 'Required Parameter (LicenseManager) is not available.'
 }
 $LicenseManager = $LicenseManager | ConvertFrom-Json
 
@@ -52,9 +52,6 @@ $jobScriptBlock = {
         $LicenseManager
     )
     . "${ScriptRoot}\Invoke-LMEvent.ps1"
-    . "${ScriptRoot}\Add-LMEntry.ps1"
-    . "${ScriptRoot}\Assert-LMEntry.ps1"
-    . "${ScriptRoot}\Remove-LMEntry.ps1"
     
     $processes = $LicenseManager.Processes.PSObject.Properties.Name | ForEach-Object { "ProcessName = '${_}'" }
     $processQuery = "SELECT * FROM Win32_Process${Action}Trace WHERE $($Processes -join ' OR ')"
@@ -64,7 +61,7 @@ $jobScriptBlock = {
     
     while ($true) {
         $lmEvent = Wait-Event -SourceIdentifier $SourceIdentifier
-        Write-Verbose "[Watch-LMEvent] LM ${Action} Event: $($lmEvent | Out-String)" -Verbose
+        Write-Verbose "[Watch-LMEvent] LM ${Action} Event: $($lmEvent | Out-String)"
         
         Remove-Event -EventIdentifier $lmEvent.EventIdentifier
         
@@ -76,13 +73,17 @@ $jobScriptBlock = {
     Check for currently running processes a get them added.
     This should really only be needed if the script is being restarted, but let's cover our basis.
 #>
+Write-Verbose "[Watch-LMEvent] Intializing ..."
+. "${PSScriptRoot}\Initialize-LMEntry.ps1"
 foreach ($process in $LicenseManager.Processes.PSObject.Properties.Name) {
+    Write-Verbose "[Watch-LMEvent] Initializing Process: ${process}"
     [IO.FileInfo] $process = $process
     
     $lmEntry = @{
         LicenseManager  = $LicenseManager
         ProcessName     = $process.Name
     }
+    Write-Verbose "[Watch-LMEvent] Initialize-LMEntry: $($lmEntry | ConvertTo-Json)"
     Initialize-LMEntry @lmEntry
 }
 
@@ -90,20 +91,27 @@ foreach ($process in $LicenseManager.Processes.PSObject.Properties.Name) {
     Start the Background Job to watch for Processes STARTING.
 #>
 $jobProcessStart = Start-Job -Name 'LM_ProcStart' -ScriptBlock $jobScriptBlock -ArgumentList 'Start',$PSScriptRoot,$LicenseManager
-Write-Verbose "[Watch-LMEvent] Started Job: LM_ProcStart (${jobProcessStart})" -Verbose
+Write-Verbose "[Watch-LMEvent] Started Job: LM_ProcStart (${jobProcessStart})"
 
 <#
     Start the Background Job to watch for Processes STOPPING
 #>
 $jobProcessStop = Start-Job -Name 'LM_ProcStop' -ScriptBlock $jobScriptBlock -ArgumentList 'Stop',$PSScriptRoot,$LicenseManager
-Write-Verbose "[Watch-LMEvent] Started Job: LM_ProcStop (${jobProcessStop})" -Verbose
+Write-Verbose "[Watch-LMEvent] Started Job: LM_ProcStop (${jobProcessStop})"
 
 <#
-    This is here whil developing.
-    Delete everything under here before going to production.
+    This is here while developing.
+    Comment this little bit out before going to production.
 #>
-Write-Verbose "[Watch-LMEvent] Running notepad in 1 second ..." -Verbose
-Start-Sleep -Seconds 1
+Write-Verbose "[Watch-LMEvent] Running notepad in 3 second ..."
+Start-Sleep -Seconds 3
 notepad
 
-while ($true) { $jobProcessStart | Receive-Job; $jobProcessStop | Receive-Job; Start-Sleep -Seconds 1 }
+<#
+    Keep this Process Open; k thanks
+#>
+while ($true) {
+    $jobProcessStart | Receive-Job
+    $jobProcessStop | Receive-Job
+    Start-Sleep -Seconds 1
+}

@@ -25,7 +25,7 @@
         The UserName of the user running the aforementioned Process ID.
 #>
 function Assert-LMEntry {
-    [CmdleBinding()]
+    [CmdletBinding()]
     [OutputType([bool])]
     param(
         [Parameter(Mandatory = $true)]

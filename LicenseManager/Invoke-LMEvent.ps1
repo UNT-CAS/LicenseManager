@@ -35,20 +35,25 @@ function Invoke-LMEvent {
     )
     Write-Verbose "[Invoke-LMEvent] Bound Parameters: $($MyInvocation.BoundParameters | Out-String)"
     Write-Verbose "[Invoke-LMEvent] Unbound Parameters: $($MyInvocation.UnboundParameters | Out-String)"
+    
+    . "${PSScriptRoot}\Add-LMEntry.ps1"
+    . "${PSScriptRoot}\Assert-LMEntry.ps1"
+    . "${PSScriptRoot}\Deny-LMEntry.ps1"
+    . "${PSScriptRoot}\Remove-LMEntry.ps1"
 
-    Write-Verbose "[Invoke-LMEvent] LMEvent: $($LMEvent | Out-String)" -Verbose
+    Write-Verbose "[Invoke-LMEvent] LMEvent: $($LMEvent | Out-String)"
     
     $ProcessName = $LMEvent.SourceEventArgs.NewEvent.ProcessName
-    Write-Verbose "[Invoke-LMEvent] ProcessName:  ${ProcessName}" -Verbose
+    Write-Verbose "[Invoke-LMEvent] ProcessName:  ${ProcessName}"
     $ProcessId = $LMEvent.SourceEventArgs.NewEvent.ProcessId
-    Write-Verbose "[Invoke-LMEvent] ProcessId:  ${ProcessId}" -Verbose
+    Write-Verbose "[Invoke-LMEvent] ProcessId:  ${ProcessId}"
 
     if ($Action -eq 'Start') {
         $ProcessUserName = (Get-Process -Id $ProcessId -IncludeUserName).UserName
-        Write-Verbose "[Invoke-LMEvent] ProcessUserName:  ${ProcessUserName}" -Verbose
+        Write-Verbose "[Invoke-LMEvent] ProcessUserName:  ${ProcessUserName}"
     } else {
         $ProcessUserName = $null
-        Write-Verbose "[Invoke-LMEvent] ProcessUserName is UNAVAILABLE; Process Stopped." -Verbose
+        Write-Verbose "[Invoke-LMEvent] ProcessUserName is UNAVAILABLE; Process Stopped."
     }
     
     $lmEntry = @{
@@ -57,14 +62,20 @@ function Invoke-LMEvent {
         ProcessId       = $ProcessId
         ProcessUserName = $ProcessUserName
     }
-
-    if ($Action = 'Start') {
+    Write-Verbose "[Invoke-LMEvent] LM Entry: $($lmEntry | ConvertTo-Json)"
+    
+    Write-Verbose "[Invoke-LMEvent] Action: ${Action}"
+    if ($Action -eq 'Start') {
+        Write-Verbose "[Invoke-LMEvent] Action Start; Determine if Process is allowed to start."
         if (Assert-LMEntry @lmEntry) {
+            Write-Verbose "[Invoke-LMEvent] Determined Process Allowed is TRUE; Adding Process entry to JSON."
             Add-LMEntry @lmEntry
         } else {
+            Write-Verbose "[Invoke-LMEvent] Determined Process Allowed is FALSE; Deny user and kill process."
             Deny-LMEntry @lmEntry
         }
     } else { # Stop
+        Write-Verbose "[Invoke-LMEvent] Action Stop; Removing Entry."
         Remove-LMEntry @lmEntry
     }
 }
