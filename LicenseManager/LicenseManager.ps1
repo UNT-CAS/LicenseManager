@@ -51,7 +51,7 @@ $jobScriptBlock = {
         [array]
         $LicenseManager
     )
-    . "${ScriptRoot}\Invoke-LMEvent.ps1"
+    . "${ScriptRoot}\Functions\Invoke-LMEvent.ps1"
     
     $processes = $LicenseManager.Processes.PSObject.Properties.Name | ForEach-Object { "ProcessName = '${_}'" }
     $processQuery = "SELECT * FROM Win32_Process${Action}Trace WHERE $($Processes -join ' OR ')"
@@ -74,7 +74,7 @@ $jobScriptBlock = {
     This should really only be needed if the script is being restarted, but let's cover our basis.
 #>
 Write-Verbose "[Watch-LMEvent] Intializing ..."
-. "${PSScriptRoot}\Initialize-LMEntry.ps1"
+. "${PSScriptRoot}\Functions\Initialize-LMEntry.ps1"
 foreach ($process in $LicenseManager.Processes.PSObject.Properties.Name) {
     Write-Verbose "[Watch-LMEvent] Initializing Process: ${process}"
     [IO.FileInfo] $process = $process
