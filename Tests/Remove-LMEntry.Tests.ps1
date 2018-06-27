@@ -8,7 +8,7 @@
 $script:defaultLMEntry = @{
     LicenseManager  = '{"DirectoryPath":"", "Processes": {"notepad.exe":5, "Calculator.exe":10}}' | ConvertFrom-Json
     ProcessName     = 'notepad.exe'
-    ProcessId       = 7
+    ProcessId       = 77
     ProcessUserName = 'Test\Pester'
 }
 $script:defaultLMEntry.LicenseManager.DirectoryPath = Join-Path -Path $projectRoot -ChildPath 'dev' -Resolve
@@ -71,33 +71,54 @@ Describe $testFile.Name {
             }
     
             It "Confirm JSON exists: ${jsonFilePath}" {
-                Test-Path $jsonFilePath | Should Be $true
+                Test-Path $jsonFilePath | Should Be $jsonFilePathShouldInitiallyExist
             }
 
-            $confirmJson = Get-Content $jsonFilePath | Out-String | ConvertFrom-Json
-
-            It "Confirm JSON UserName: $($lmEntry.ProcessUserName)" {
-                $confirmJson.UserName | Should Be $lmEntry.ProcessUserName
+            if (Test-Path $jsonFilePath) {
+                $confirmJson = Get-Content $jsonFilePath | Out-String | ConvertFrom-Json
+            } else {
+                $confirmJson = $null
             }
 
-            It "Confirm JSON ComputerName: ${env:ComputerName}" {
-                $confirmJson.ComputerName | Should Be $env:ComputerName
-            }
-
-            It "Confirm JSON TimeStamp is recent: $($confirmJson.TimeStamp)" {
-                (Get-Date $confirmJson.TimeStamp) -gt ([datetime]::Now).AddMinutes(-1) | Should Be $true
-            }
-
-            It "Confirm JSON Process Id: $($test.ProcessIdFinal -join ', ')" {
-                Compare-Object $confirmJson.ProcessId $test.ProcessIdFinal | Should BeNullOrEmpty
-            }
-
-            It "Confirm JSON Process Id Count: $($test.ProcessIdFinal.Count)" {
-                ($confirmJson.ProcessId | Measure-Object).Count | Should Be $test.ProcessIdFinal.Count
+            if (($test.Keys -contains 'ProcessIdFinalRemove') -and (($test.ProcessIdFinalRemove | Measure-Object).Count -gt 0)) {
+                foreach ($item in $confirmJson) {
+                    Write-Verbose "Item ComputerName: $($item.ComputerName)"
+                    if ($item.ComputerName -eq $env:ComputerName) {
+                        It "Confirm JSON UserName: $($lmEntry.ProcessUserName)" {
+                            $item.UserName | Should Be $lmEntry.ProcessUserName
+                        }
+            
+                        It "Confirm JSON ComputerName: ${env:ComputerName}" {
+                            $item.ComputerName | Should Be $env:ComputerName
+                        }
+                        
+                        if (-not $test.TimeStampWillNotUpdateRemove) {
+                            It "Confirm JSON TimeStamp is recent: $($item.TimeStamp)" {
+                                (Get-Date $item.TimeStamp) -gt ([datetime]::Now).AddMinutes(-1) | Should Be $true
+                            }
+                        }
+            
+                        It "Confirm JSON Process Id: $($test.ProcessIdFinalRemove -join ', ')" {
+                            Compare-Object $item.ProcessId $test.ProcessIdFinalRemove | Should BeNullOrEmpty
+                        }
+            
+                        It "Confirm JSON Process Id Count: $($test.ProcessIdFinalRemove.Count)" {
+                            ($item.ProcessId | Measure-Object).Count | Should Be $test.ProcessIdFinalRemove.Count
+                        }
+                    }
+                }
+            } else {
+                <#
+                    ProcessIdFinalRemove Empty
+                    This should mean that the "computer/user combo" shouldn't have an entry.
+                #>
+                It "Confirm *Computer/User Combo* doesn't exist." {
+                    $confirmJson | Where-Object { ($_.ComputerName -eq $env:ComputerName) -and ($_.UserName -eq $lmEntry.ProcessUserName) } | Should BeNullOrEmpty
+                }
             }
     
             Write-Verbose "Removing temp JSON file."
-            Remove-Item -LiteralPath $jsonFilePath -Force
+            Remove-Item -LiteralPath $jsonFilePath -Force -ErrorAction SilentlyContinue
         }
     }
 }

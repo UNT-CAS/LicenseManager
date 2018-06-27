@@ -1,6 +1,7 @@
 @{
-    ProcessIdFinal    = @(77, 7)
-    StartingJson      = @'
+    ProcessIdFinalAdd    = @(77, 7)
+    ProcessIdFinalRemove = @()
+    StartingJson         = @'
 [
     {
         "UserName":  "Test\\Pester",
@@ -75,5 +76,5 @@
     }
 ]
 '@
-    NewProcessAllowed = $false
+    NewProcessAllowed    = $false
 }

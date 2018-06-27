@@ -1,6 +1,7 @@
 @{
-    ProcessIdFinal    = @(7, 77)
-    StartingJson      = @'
+    ProcessIdFinalAdd    = @(7, 77)
+    ProcessIdFinalRemove = @()
+    StartingJson         = @'
 {
     "UserName":  "Test\\Pester",
     "ProcessId":  [
@@ -10,5 +11,5 @@
     "TimeStamp":  "Thursday, June 22, 2017 5:43:33 PM"
 }
 '@
-    NewProcessAllowed = $true
+    NewProcessAllowed    = $true
 }

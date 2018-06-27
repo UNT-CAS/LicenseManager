@@ -21,11 +21,16 @@ Hopefully, this document will make it a little easier to understand what's in th
     ProcessUserName = 'Test\Pester'
 }
 ```
-
 *Note: see the main README to know what `%ProjectRoot%` is.*
 *The `dev` folder is in `.gitignore`.*
 
 *Note: the GUID (`10d5c669-9386-4c97-9626-2a21a29c5ec3`) is a random and unique per test iteration.*
+
+**Modifiers:**
+
+- Test `Remove-LMEntry` changes:
+  - `ProcessUserName`: `""`
+  - `ProcessID`: `77`
 
 # Parameters
 
@@ -79,3 +84,11 @@ Use this parameter if you'd like to specify the starting JSON file.
 - Default: `$false`
 
 This is for determining what the answer to `Assert-LMEntry` should be.
+
+## TimeStampWillNotUpdate
+
+- Type: `[bool]`
+- Default: `$false`
+
+When removing an entry, the entry might not exist.
+So we set this to skip that test.

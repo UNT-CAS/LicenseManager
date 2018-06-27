@@ -1,4 +1,5 @@
 @{
-    ProcessIdFinal    = @(7)
-    NewProcessAllowed = $true
+    ProcessIdFinalAdd    = @(7)
+    ProcessIdFinalRemove = @()
+    NewProcessAllowed    = $true
 }

@@ -60,13 +60,19 @@ function Remove-LMEntry {
         $newJsonInfo = $jsonInfo | Foreach-Object {
             $currentJsonInfo = $_
             if (($currentJsonInfo.ComputerName -eq $env:COMPUTERNAME) -and ($currentJsonInfo.ProcessId -contains $ProcessId)) {
-                Write-Verbose "[Remove-LMEntry] Relevant JSON Info Found: $($currenJsonInfo | Out-String)"
+                Write-Verbose "[Remove-LMEntry] Relevant JSON Info Found: $($currentJsonInfo | Out-String)"
                 if (($currentJsonInfo.ProcessId | Measure-Object).Count -eq 1) {
-                    continue
+                    Write-Verbose "[Remove-LMEntry] Only the one Process ID found. Removing entire entry."
                 } else {
+                    Write-Verbose "[Remove-LMEntry] More than one Process ID found. Removing entire the one Process ID."
                     [System.Collections.ArrayList] $tempProcessIds = $currentJsonInfo.ProcessId
                     $tempProcessIds.Remove($ProcessId)
                     $currentJsonInfo.ProcessId = $tempProcessIds
+
+                    Write-Verbose "[Remove-LMEntry] Update the TimeStamp."
+                    $currentJsonInfo.TimeStamp = (Get-Date).DateTime
+
+                    Write-Output $currentJsonInfo
                 }
             } else {
                 Write-Output $currentJsonInfo
@@ -94,8 +100,16 @@ function Remove-LMEntry {
                 }
             }
 
-            $file.WriteLine(($newJsonInfo | ConvertTo-Json))
+            Write-Verbose "[Remove-LMEntry] Writing JSON ..."
+            $file.WriteLine($($newJsonInfo | ConvertTo-Json))
+            Write-Verbose "[Remove-LMEntry] Closing JSON ..."
             $file.Close()
+        
+            while (-not (Test-Path $jsonFilePath)) {
+                Write-Verbose "[Remove-LMEntry] Waiting for: ${jsonFilePath}"
+                Start-Sleep -Milliseconds 100
+            }
+            Write-Verbose "[Remove-LMEntry] Confirmed JSON exists"
         }
     } else {
         Write-Warning "[Remove-LMEntry] JSON file does NOT exist; odd. :|"

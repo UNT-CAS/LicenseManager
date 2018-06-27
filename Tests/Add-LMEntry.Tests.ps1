@@ -98,7 +98,6 @@ Describe $testFile.Name {
                 }
             }
 
-    
             Write-Verbose "Removing temp JSON file."
             Remove-Item -LiteralPath $jsonFilePath -Force
         }
