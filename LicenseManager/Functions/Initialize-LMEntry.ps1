@@ -42,7 +42,7 @@ function Initialize-LMEntry {
 
     Write-Verbose "[Initialize-LMEntry] ProcessName: ${ProcessName}"
 
-    $processes = Get-Process $ProcessName.BaseName -IncludeUserName
+    $processes = Get-Process $ProcessName.BaseName -IncludeUserName -ErrorAction SilentlyContinue
     Write-Verbose "[Initialize-LMEntry] Processes: $($processes | Out-String)"
     
     if ($processes) {

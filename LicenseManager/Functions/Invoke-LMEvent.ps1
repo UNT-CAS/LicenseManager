@@ -42,6 +42,9 @@ function Invoke-LMEvent {
     . "${PSScriptRoot}\Remove-LMEntry.ps1"
 
     Write-Verbose "[Invoke-LMEvent] LMEvent: $($LMEvent | Out-String)"
+    Write-Verbose "[Invoke-LMEvent] LMEvent SourceEventArgs: $($LMEvent.SourceEventArgs | Out-String)"
+    Write-Verbose "[Invoke-LMEvent] LMEvent SourceEventArgs NewEvent All: $($LMEvent.SourceEventArgs.NewEvent | Select * | Out-String)"
+    Write-Verbose "[Invoke-LMEvent] LMEvent SourceEventArgs NewEvent CimInstanceProperties: $($LMEvent.SourceEventArgs.NewEvent.CimInstanceProperties | Select * | Out-String)"
     
     $ProcessName = $LMEvent.SourceEventArgs.NewEvent.ProcessName
     Write-Verbose "[Invoke-LMEvent] ProcessName:  ${ProcessName}"

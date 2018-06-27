@@ -26,7 +26,7 @@
         The UserName of the user running the aforementioned Process ID.
 #>
 function Deny-LMEntry {
-    [CmdleBinding()]
+    [CmdletBinding()]
     [OutputType([void])]
     param(
         [Parameter(Mandatory = $true)]
@@ -166,25 +166,36 @@ objShell.Run """{0}"" {1}", 0
     $ProcessConcurrentMax = $LicenseManager.Processes.$ProcessName
     Write-Verbose "[Deny-LMEntry] Process Concurrent Max: ${ProcessConcurrentMax}"
     
+    $process = Get-Process -Id $ProcessId -IncludeUserName
+    Write-Verbose "[Deny-LMEntry] Process: $($process | Out-String)"
+
+    [IO.FileInfo] $processPath = $process.Path
+    $productName = if ($processPath.VersionInfo.FileDescription) { $processPath.VersionInfo.FileDescription } elseif ($processPath.VersionInfo.ProductName) { $processPath.VersionInfo.ProductName } else { $ProcessName.BaseName }
+    
     $blockedAppMessage = @'
-Timestamp: {0}
+A valid license could not be obtained by the network license manager.
 
-The application you are trying to access ({1}) has exceeded it's maximum concurency of {2}. Please try again later.
+The application you are trying to access ({1}) has exceeded its maximum concurency of {2}. Please try again later. If you feel like this message is an error, please contact your system administrator or IT department.
 
-If you feel like this message is an error, please contact your IT department.
+Error [{3},{4},{5},{6}]
+{0}
 '@
 
     $blockedAppVBS = @'
 Dim wshShell: Set wshShell = WScript.CreateObject("WScript.Shell")
 WshShell.Popup "{0}", {1}, "{2}", {3}
 '@ -f @(
-        $blockedAppMessage.Replace([System.Environment]::NewLine, '"& vbCrLf &"') -f @(
-            (Get-Date).DateTime,
-            $ProcessName,
+        $($blockedAppMessage.Replace([System.Environment]::NewLine, '"& vbCrLf &"').Replace("`n", '"& vbCrLf &"').Replace('vbCrLf &""& vbCrLf', 'vbCrLf & vbCrLf') -f @(
+            (Get-Date -Format 'O')
+            $productName
             $ProcessConcurrentMax
-        ),
+            (whoami)
+            (hostname)
+            $ProcessId
+            $ProcessName
+        )),
         0,
-        "License Manager: ${ProcessName}",
+        "License Manager: ${productName}",
         16
     )
     Write-Verbose "[Deny-LMEntry] Blocked App VBS:`n$($blockedAppVBS | Out-String)"
@@ -192,7 +203,6 @@ WshShell.Popup "{0}", {1}, "{2}", {3}
     Write-Verbose "[Deny-LMEntry] Notifying User ..."
     Invoke-AsUser -User $ProcessUserName -Command $blockedAppVBS -IsVBScript
 
-    $process = Get-Process -Id $ProcessId -IncludeUserName
     Write-Verbose "[Deny-LMEntry] Stopping Process: ${ProcessId} ${process} $($process.Username)"
     $process | Stop-Process -Force
 }
