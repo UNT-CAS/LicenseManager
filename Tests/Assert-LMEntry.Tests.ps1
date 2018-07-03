@@ -59,7 +59,13 @@ Describe $testFile.Name {
             It "Confirm JSON exists (${jsonFilePathShouldInitiallyExist}): ${jsonFilePath}" {
                 Test-Path $jsonFilePath | Should Be $jsonFilePathShouldInitiallyExist
             }
-
+    
+            if (Test-Path $jsonFilePath) {
+                It "Confirm JSON hasn't changed" {
+                    (Get-FileHash -LiteralPath $jsonFilePath -Algorithm SHA512).Hash | Should Be $jsonPreSha512.Hash
+                }
+            }
+            
             It "Process Allowed: $($test.ProcessAllowed)" {
                 $script:lmEntryAssertation | Should Be $test.ProcessAllowed
             }
