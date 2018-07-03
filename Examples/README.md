@@ -74,7 +74,7 @@ If `[string]` then we will ensure the test starts with a CSV with the contents s
 - Default: `$false`
 - String Replacement:
     - `{0}`: The name of the current computer.
-- Function Tests: `Add-LMEntry`
+- Function Tests: `Add-LMEntry`, `Assert-LMEntry`
 
 If `[bool]` then we will ensure the test starts with an empty JSON (`$true`) or without a JSON at all (`$false`).
 
@@ -105,59 +105,10 @@ There's no support for `[bool]` and `$true`.
 
 If `[string]` then we will test the resultant JSON (the JSON created from calling the function) with the value of this variable to ensure they are the same.
 
-
-
-
-
-
-
-:bangbang: :bangbang: :bangbang: :bangbang: :bangbang: :bangbang: :bangbang: :bangbang: :bangbang: :bangbang: :bangbang: :bangbang: 
-**WORK IN PROGRESS; BELOW THIS LINE!!**
-:bangbang: :bangbang: :bangbang: :bangbang: :bangbang: :bangbang: :bangbang: :bangbang: :bangbang: :bangbang: :bangbang: :bangbang: 
-
-## JsonInitiallyDoesNotExist
+## ProcessAllowed
 
 - Type: `[bool]`
 - Default: `$false`
+- Function Tests: `Assert-LMEntry`
 
-This is for testing what happens if the JSON file doesn't exist.
-Set to true if you don't want a JSON file.
-Otherwise, an empty JSON file will be generated.
-
-## ProcessIdFinalAdd
-
-- Type: `[int[]]`
-- Default: `@()`
-
-This is what the final ProcessID, in the JSON file, should be after adding the test process.
-
-## ProcessIdFinalRemove
-
-- Type: `[int[]]`
-- Default: `@()`
-
-This is what the final ProcessID, in the JSON file, should be after removing the test process.
-
-## StartingJson
-
-- Type: `[string]`
-- Default: `$null`
-
-Use this parameter if you'd like to specify the starting JSON file.
-
-- **ComputerName**: If you leave this an an *empty string*, it will be filled in with `$env:ComputerName`.
-
-## NewProcessAllowed
-
-- Type: `[bool]`
-- Default: `$false`
-
-This is for determining what the answer to `Assert-LMEntry` should be.
-
-## TimeStampWillNotUpdateRemove
-
-- Type: `[bool]`
-- Default: `$false`
-
-When removing an entry, the entry might not exist.
-So we set this to skip that test.
+We will ensure the call to `Assert-LMEntry` returns the same as the value of thie *main key*.
