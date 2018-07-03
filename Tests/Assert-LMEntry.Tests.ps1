@@ -5,34 +5,20 @@
 [IO.FileInfo]      $testFile = Join-Path -Path $projectDirectory -ChildPath (Join-Path -Path 'Functions' -ChildPath ($pesterFile.Name -replace '\.Tests\.', '.')) -Resolve
 . $testFile
 
-$script:defaultLMEntry = @{
-    LicenseManager  = '{"DirectoryPath":"", "Processes": {"notepad.exe":5, "Calculator.exe":10}}' | ConvertFrom-Json
-    ProcessName     = 'notepad.exe'
-    ProcessId       = 7
-    ProcessUserName = 'Test\Pester'
-}
-$script:defaultLMEntry.LicenseManager.DirectoryPath = Join-Path -Path $projectRoot -ChildPath 'dev' -Resolve
-
 [System.Collections.ArrayList] $tests = @()
-foreach ($example in (Get-ChildItem (Join-Path -Path $projectRoot -ChildPath 'Examples' -Resolve) -Filter '*.psd1' -File)) {
+$examples = Get-ChildItem (Join-Path -Path $projectRoot -ChildPath 'Examples' -Resolve) -Filter "$($testFile.BaseName).*.psd1" -File
+
+foreach ($example in $examples) {
     [hashtable] $test = @{
-        Name = $example.BaseName.Replace('_', ' ')
+        Name = $example.BaseName.Replace("$($testFile.BaseName).$verb", '').Replace('_', ' ')
     }
     Write-Verbose "Test: $($test | ConvertTo-Json)"
     
     foreach ($exampleData in (Import-PowerShellDataFile -LiteralPath $example.FullName).GetEnumerator()) {
-        if ($exampleData.Name -eq 'StartingJson') {
-            $jsonTemp = $exampleData.Value | ConvertFrom-Json
-            foreach ($entry in $jsonTemp) {
-                if (($entry.PSObject.Properties.Name -contains 'ComputerName') -and ([string]::IsNullOrEmpty($entry.ComputerName))) {
-                    $entry.ComputerName = $env:ComputerName
-                }
-            }
-            $test.Add($exampleData.Name, ($jsonTemp | ConvertTo-Json))
+        if ($exampleData.Name -eq 'Parameters') {
+            $exampleData.Value.LicenseManager.DirectoryPath = $exampleData.Value.LicenseManager.DirectoryPath.Replace('%ProjectRoot%', $projectRoot)
         }
-        else {
-            $test.Add($exampleData.Name, $exampleData.Value)
-        }
+        $test.Add($exampleData.Name, $exampleData.Value)
     }
     
     Write-Verbose "Test: $($test | ConvertTo-Json)"
@@ -42,23 +28,24 @@ foreach ($example in (Get-ChildItem (Join-Path -Path $projectRoot -ChildPath 'Ex
 Describe $testFile.Name {
     foreach ($test in $tests) {
         Context $test.Name {
-            $lmEntry = $script:defaultLMEntry.Clone()
-            $fakeProcessName = (New-Guid).Guid
-            $lmEntry.LicenseManager.Processes | Add-Member -NotePropertyName $fakeProcessName -NotePropertyValue 2
-            $lmEntry.ProcessName = $fakeProcessName
-            Write-Host "LM Entry: $($lmEntry | ConvertTo-Json)"
-    
-            $jsonFilePath = Join-Path -Path $lmEntry.LicenseManager.DirectoryPath -ChildPath "${fakeProcessName}.json"
-    
-            if ($test.JsonInitiallyDoesNotExist) {
-                $jsonFilePathShouldInitiallyExist = $false
-            } else {
-                New-Item -ItemType File -Path $jsonFilePath
+            [hashtable] $lmEntry = $test.Parameters
+            [IO.FileInfo] $jsonFilePath = '{0}\{1}.json' -f $lmEntry.LicenseManager.DirectoryPath, $lmEntry.ProcessName
+            
+            if ($test.ExistingJson) {
+                Write-Verbose "Starting JSON required."
+                New-Item -ItemType File -Path $jsonFilePath -Force
                 $jsonFilePathShouldInitiallyExist = $true
-            }
 
-            if ($test.StartingJson) {
-                $test.StartingJson | Out-File -Encoding ascii -LiteralPath $jsonFilePath -Force
+                if ($test.ExistingJson -is [string]) {
+                    $outJson = $test.ExistingJson.Replace('{0}', $env:ComputerName)
+                    $outJson | Out-File -Encoding ascii -LiteralPath $jsonFilePath
+                }
+
+                $jsonPreSha512 = Get-FileHash -LiteralPath $jsonFilePath -Algorithm SHA512
+            }
+            else {
+                Write-Verbose "Starting JSON NOT required."
+                $jsonFilePathShouldInitiallyExist = $false
             }
     
             It "Confirm JSON exists (${jsonFilePathShouldInitiallyExist}): ${jsonFilePath}" {
@@ -66,11 +53,21 @@ Describe $testFile.Name {
             }
     
             It "Assert-LMEntry" {
-                Assert-LMEntry @lmEntry -Verbose | Should Be $test.NewProcessAllowed
+                { $script:lmEntryAssertation = Assert-LMEntry @lmEntry -Verbose } | Should Not Throw
             }
     
-            Write-Verbose "Removing temp JSON file."
-            Remove-Item -LiteralPath $jsonFilePath -Force -ErrorAction SilentlyContinue
+            It "Confirm JSON exists (${jsonFilePathShouldInitiallyExist}): ${jsonFilePath}" {
+                Test-Path $jsonFilePath | Should Be $jsonFilePathShouldInitiallyExist
+            }
+
+            It "Process Allowed: $($test.ProcessAllowed)" {
+                $script:lmEntryAssertation | Should Be $test.ProcessAllowed
+            }
+            
+            if (Test-Path $jsonFilePath) {
+                Write-Verbose "Removing temp JSON file."
+                Remove-Item -LiteralPath $jsonFilePath -Force
+            }
         }
     }
 }

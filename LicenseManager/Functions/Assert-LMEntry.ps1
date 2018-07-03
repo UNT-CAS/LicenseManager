@@ -57,7 +57,7 @@ function Assert-LMEntry {
 
     $jsonInfo = Get-Content -LiteralPath $jsonFilePath | Out-String | ConvertFrom-Json
     $jsonInfoCount = ($jsonInfo | Measure-Object).Count
-    $ProcessConcurrentMax = $LicenseManager.Processes.$ProcessName
+    $ProcessConcurrentMax = $LicenseManager.Processes.$($ProcessName.Name)
     Write-Verbose "[Assert-LMEntry] JSON Info Count: ${jsonInfoCount}"
     Write-Verbose "[Assert-LMEntry] Process Concurrent Max: ${ProcessConcurrentMax}"
     if ($jsonInfoCount -lt $ProcessConcurrentMax) {
