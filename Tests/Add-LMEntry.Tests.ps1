@@ -50,7 +50,6 @@ Describe $testFile.Name {
             It "Confirm JSON exists (${jsonFilePathShouldInitiallyExist}): ${jsonFilePath}" {
                 Test-Path $jsonFilePath | Should Be $jsonFilePathShouldInitiallyExist
             }
-
     
             It "Add-LMEntry" {
                 { Add-LMEntry @lmEntry -Verbose } | Should Not Throw
