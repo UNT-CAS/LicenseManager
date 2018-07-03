@@ -62,13 +62,14 @@ function Add-LMEntry {
         Write-Verbose "[Add-LMEntry] JSON file exists: ${jsonFileExists}"
     }
 
+    $jsonChangeMade = $false
     if ($jsonFilePath.Length -gt 0 -and -not ([string]::IsNullOrEmpty((Get-Content D:\Temp\LicenseManager\notepad.exe.json).Trim()))) {
         Write-Verbose "[Add-LMEntry] JSON file is NOT empty."
         
         $jsonInfo = Get-Content -LiteralPath $jsonFilePath | Out-String | ConvertFrom-Json
         Write-Verbose "[Add-LMEntry] JSON: $($jsonInfo | ConvertTo-Json)"
         
-        Write-Verbose "[Add-LMEntry] Updating JSON: $($jsonInfo | ConvertTo-Json)"
+        Write-Verbose "[Add-LMEntry] Updating JSON ..."
         $newJsonInfo = $jsonInfo | Foreach-Object {
             $currentJsonInfo = $_
             if (($currentJsonInfo.ComputerName -eq $env:COMPUTERNAME) -and ($currentJsonInfo.UserName -eq $ProcessUserName)) {
@@ -81,15 +82,15 @@ function Add-LMEntry {
                 }
                     
                 Write-Verbose "[Add-LMEntry] Update the TimeStamp."
-                $currentJsonInfo.TimeStamp = (Get-Date).DateTime
+                $currentJsonInfo.TimeStamp = (Get-Date -Format 'O')
 
                 Write-Verbose "[Add-LMEntry] Relevant JSON Info Updated: $($currentJsonInfo | Out-String)"
                 Write-Output $currentJsonInfo
+                $jsonChangeMade = $true
             } else {
                 Write-Output $currentJsonInfo
             }
         } | ConvertTo-Json
-        Write-Verbose "[Add-LMEntry] New JSON: $($newJsonInfo | Out-String)"
     } else {
         Write-Verbose "[Add-LMEntry] JSON file is empty."
 
@@ -97,40 +98,52 @@ function Add-LMEntry {
             ComputerName = $env:COMPUTERNAME
             UserName = $ProcessUserName
             ProcessId = @($ProcessId)
-            TimeStamp = (Get-Date).DateTime
+            TimeStamp = (Get-Date -Format 'O')
         } | ConvertTo-Json
         Write-Verbose "[Add-LMEntry] JSON: [$($newJsonInfo | Out-String)]"
+
+        $jsonChangeMade = $true
     }
 
-    Write-Verbose "[Add-LMEntry] Quick check for Race Conditions ..."
-    if ((Test-Path $jsonFilePath) -and (Get-ItemProperty $jsonFilePath).Length -ne $jsonFilePath.Length) {
-        Write-Verbose "[Add-LMEntry] Race Condition: File Size has changed. Restart Add-LMEntry"
-        Add-LMEntry @PSBoundParameters
+    if ($jsonChangeMade) {
+        Write-Verbose "[Add-LMEntry] New JSON: $($newJsonInfo | Out-String)"
     } else {
-        Write-Verbose "[Add-LMEntry] NO Race Conditions found."
-        Write-Verbose "[Add-LMEntry] Opening JSON file for write (locking) ..."
-        while ($true) {
-            try {
-                # $file = [System.IO.File]::Open($jsonFilePath, 'OpenOrCreate', 'Write', 'None')
-                $file = [System.IO.StreamWriter] ([string] $jsonFilePath)
-                Write-Verbose "[Add-LMEntry] JSON File Opened and Locked."
-                break
-            } catch {
-                Write-Warning "[Add-LMEntry] Error Opening/Locking JSON File: $($Error[0].Exception.InnerException.Message)"
-                Write-Verbose "[Add-LMEntry] Trying again ..."
+        Write-Verbose "[Add-LMEntry] No Change Made; nothing new to show."
+    }
+
+    if ($jsonChangeMade) {
+        Write-Verbose "[Add-LMEntry] Quick check for Race Conditions ..."
+        if ((Test-Path $jsonFilePath) -and (Get-ItemProperty $jsonFilePath).Length -ne $jsonFilePath.Length) {
+            Write-Verbose "[Add-LMEntry] Race Condition: File Size has changed. Restart Add-LMEntry"
+            Add-LMEntry @PSBoundParameters
+        } else {
+            Write-Verbose "[Add-LMEntry] NO Race Conditions found."
+            Write-Verbose "[Add-LMEntry] Opening JSON file for write (locking) ..."
+            while ($true) {
+                try {
+                    # $file = [System.IO.File]::Open($jsonFilePath, 'OpenOrCreate', 'Write', 'None')
+                    $file = [System.IO.StreamWriter] ([string] $jsonFilePath)
+                    Write-Verbose "[Add-LMEntry] JSON File Opened and Locked."
+                    break
+                } catch {
+                    Write-Warning "[Add-LMEntry] Error Opening/Locking JSON File: $($Error[0].Exception.InnerException.Message)"
+                    Write-Verbose "[Add-LMEntry] Trying again ..."
+                    Start-Sleep -Milliseconds 100
+                }
+            }
+            
+            Write-Verbose "[Add-LMEntry] Writing JSON ..."
+            $file.WriteLine($newJsonInfo)
+            Write-Verbose "[Add-LMEntry] Closing JSON ..."
+            $file.Close()
+            
+            while (-not (Test-Path $jsonFilePath)) {
+                Write-Verbose "[Add-LMEntry] Waiting for: ${jsonFilePath}"
                 Start-Sleep -Milliseconds 100
             }
+            Write-Verbose "[Add-LMEntry] Confirmed JSON exists"
         }
-        
-        Write-Verbose "[Add-LMEntry] Writing JSON ..."
-        $file.WriteLine($newJsonInfo)
-        Write-Verbose "[Add-LMEntry] Closing JSON ..."
-        $file.Close()
-        
-        while (-not (Test-Path $jsonFilePath)) {
-            Write-Verbose "[Add-LMEntry] Waiting for: ${jsonFilePath}"
-            Start-Sleep -Milliseconds 100
-        }
-        Write-Verbose "[Add-LMEntry] Confirmed JSON exists"
+    } else {
+        Write-Verbose "[Add-LMEntry] No Change Made; nothing new to write."
     }
 }

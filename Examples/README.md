@@ -58,36 +58,62 @@ See the fu
 
 *Note: adding it to the file as well would cause and error that I could easily fix, but I don't care to.*
 
-## *Write-LMEntryDenial*
-
-### ExistingCsv
+## ExistingCsv
 
 - Type: `[bool]` or `[string]`
 - Default: `$false`
+- Function Tests: `Write-LMEntryDenial`
 
 If `[bool]` then we will ensure the test starts with an empty CSV (`$true`) or without a CSV at all (`$false`).
 
 If `[string]` then we will ensure the test starts with a CSV with the contents set to value of this variable.
 
-### ExpectedCsv
+## ExistingJson
+
+- Type: `[bool]` or `[string]`
+- Default: `$false`
+- String Replacement:
+    - `{0}`: The name of the current computer.
+- Function Tests: `Add-LMEntry`
+
+If `[bool]` then we will ensure the test starts with an empty JSON (`$true`) or without a JSON at all (`$false`).
+
+If `[string]` then we will ensure the test starts with a JSON with the contents set to value of this variable.
+
+## ExpectedCsv
 
 - Type: `[string]`
 - Default: `$false`
 - String Replacement:
     - `{0}`: The name of the current computer.
     - `{1}`: Timestamp from one minute ago.
+- Function Tests: `Write-LMEntryDenial`
 
 We will test the resultant CSV (the CSV created from calling the function) with the value of this variable to ensure they are the same.
+
+## ExpectedJson
+
+- Type: `[bool]` or `[string]`
+- Default: `$false`
+- String Replacement:
+    - `{0}`: The name of the current computer.
+    - `{1}`: Timestamp from one minute ago.
+- Function Tests: `Add-LMEntry`
+
+If `[bool]` and `$false` then we will ensure there is no change to the JSON at all.
+There's no support for `[bool]` and `$true`.
+
+If `[string]` then we will test the resultant JSON (the JSON created from calling the function) with the value of this variable to ensure they are the same.
+
+
+
+
+
 
 
 :bangbang: :bangbang: :bangbang: :bangbang: :bangbang: :bangbang: :bangbang: :bangbang: :bangbang: :bangbang: :bangbang: :bangbang: 
 **WORK IN PROGRESS; BELOW THIS LINE!!**
 :bangbang: :bangbang: :bangbang: :bangbang: :bangbang: :bangbang: :bangbang: :bangbang: :bangbang: :bangbang: :bangbang: :bangbang: 
-
-
-
-
-
 
 ## JsonInitiallyDoesNotExist
 
