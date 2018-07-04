@@ -8,7 +8,7 @@ Write-Host "[Deploy] APPVEYOR_PROJECT_NAME: ${env:APPVEYOR_PROJECT_NAME}" -Foreg
 
 Deploy Module {
     By PSGalleryModule LicenseManager {
-        FromSource "${PSScriptRootParent}\BuildOutput\LicenseManager"
+        FromSource "${PSScriptRootParent}\LicenseManager"
         To PSGallery
         # Tagged Testing
         WithOptions @{

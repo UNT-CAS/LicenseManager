@@ -19,8 +19,10 @@ This ensure that the process is always running. If it dies for some reason, we'l
 
 # Quick Setup
 
-1. Download the contents of the `LicenseManager` folder in this repo.
-1. Set the `$env:LicenseManager` Environment Variable:
+1. Set the `$env:LicenseManager` Environment Variable; see [the section below](#envlicensemanager).
+1. Install `LicenseManager`: `Install-Module LicenseManager`.
+1. Import `LicenseManager`: `Import-Module LicenseManager`.
+1. Start `LicenseManager`: `Invoke-LicenseManager`.
 
 ## `$env:LicenseManager`
 

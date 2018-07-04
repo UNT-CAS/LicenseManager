@@ -2,13 +2,13 @@
 [IO.FileInfo]      $pesterFile = [io.fileinfo] ([string] (Resolve-Path -Path $MyInvocation.MyCommand.Path))
 [IO.DirectoryInfo] $projectRoot = Split-Path -Parent $pesterFile.Directory
 [IO.DirectoryInfo] $projectDirectory = Join-Path -Path $projectRoot -ChildPath $projectDirectoryName -Resolve
-[IO.FileInfo]      $testFile = Join-Path -Path $projectDirectory -ChildPath (Join-Path -Path 'Functions' -ChildPath ($pesterFile.Name -replace '\.Tests\.', '.')) -Resolve
+[IO.FileInfo]      $testFile = Join-Path -Path $projectDirectory -ChildPath (Join-Path -Path 'Private' -ChildPath ($pesterFile.Name -replace '\.Tests\.', '.')) -Resolve
 . $testFile
 
-. $(Join-Path -Path $projectDirectory -ChildPath (Join-Path -Path 'Functions' -ChildPath 'Add-LMEntry.ps1') -Resolve)
-. $(Join-Path -Path $projectDirectory -ChildPath (Join-Path -Path 'Functions' -ChildPath 'Assert-LMEntry.ps1') -Resolve)
-. $(Join-Path -Path $projectDirectory -ChildPath (Join-Path -Path 'Functions' -ChildPath 'Remove-LMEntry.ps1') -Resolve)
-. $(Join-Path -Path $projectDirectory -ChildPath (Join-Path -Path 'Functions' -ChildPath 'Deny-LMEntry.ps1') -Resolve)
+. $(Join-Path -Path $projectDirectory -ChildPath (Join-Path -Path 'Private' -ChildPath 'Add-LMEntry.ps1') -Resolve)
+. $(Join-Path -Path $projectDirectory -ChildPath (Join-Path -Path 'Private' -ChildPath 'Assert-LMEntry.ps1') -Resolve)
+. $(Join-Path -Path $projectDirectory -ChildPath (Join-Path -Path 'Private' -ChildPath 'Remove-LMEntry.ps1') -Resolve)
+. $(Join-Path -Path $projectDirectory -ChildPath (Join-Path -Path 'Private' -ChildPath 'Deny-LMEntry.ps1') -Resolve)
 
 [System.Collections.ArrayList] $tests = @()
 $examples = Get-ChildItem (Join-Path -Path $projectRoot -ChildPath 'Examples' -Resolve) -Filter "$($testFile.BaseName).*.psd1" -File
