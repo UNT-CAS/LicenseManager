@@ -54,8 +54,6 @@ Describe $testFile.Name {
             It "Remove-LMEntry" {
                 { Remove-LMEntry @lmEntry -Verbose } | Should Not Throw
             }
-    
-            $jsonPostSha512 = Get-FileHash -LiteralPath $jsonFilePath -Algorithm SHA512
 
             if ($test.ExpectedJson) {
                 It "Confirm JSON exists (True): ${jsonFilePath}" {
