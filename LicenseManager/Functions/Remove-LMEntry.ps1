@@ -78,7 +78,7 @@ function Remove-LMEntry {
                 Write-Output $currentJsonInfo
             }
         }
-        Write-Verbose "[Remove-LMEntry] New JSON: $($newJsonInfo | Out-String)"
+        Write-Verbose "[Remove-LMEntry] New JSON: $($newJsonInfo | ConvertTo-Json)"
 
         Write-Verbose "[Remove-LMEntry] Quick check for Race Conditions ..."
         if ((Get-ItemProperty $jsonFilePath).Length -ne $jsonFilePath.Length) {

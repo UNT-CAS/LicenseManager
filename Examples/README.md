@@ -7,6 +7,9 @@ Hopefully, this document will make it a little easier to understand what's in th
 Each Function has it's own set of examples.
 It should be obvious, but the function's example's file name starts with the function's name; followed by a description of the test.
 
+- JSON File: Used for tracking concurrency per product.
+- CSV File: Used for logging denials. This is so we can report on how many times a denial has been issued.
+
 ## Test Entry
 
 ```powershell
@@ -74,7 +77,7 @@ If `[string]` then we will ensure the test starts with a CSV with the contents s
 - Default: `$false`
 - String Replacement:
     - `{0}`: The name of the current computer.
-- Function Tests: `Add-LMEntry`, `Assert-LMEntry`
+- Function Tests: `Add-LMEntry`, `Assert-LMEntry`, `Deny-LMEntry`
 
 If `[bool]` then we will ensure the test starts with an empty JSON (`$true`) or without a JSON at all (`$false`).
 
@@ -98,12 +101,20 @@ We will test the resultant CSV (the CSV created from calling the function) with 
 - String Replacement:
     - `{0}`: The name of the current computer.
     - `{1}`: Timestamp from one minute ago.
-- Function Tests: `Add-LMEntry`
+- Function Tests: `Add-LMEntry`, `Deny-LMEntry`
 
 If `[bool]` and `$false` then we will ensure there is no change to the JSON at all.
 There's no support for `[bool]` and `$true`.
 
 If `[string]` then we will test the resultant JSON (the JSON created from calling the function) with the value of this variable to ensure they are the same.
+
+## NoChange
+
+- Type: `[bool]`
+- Default: `$false`
+- Function Tests: `Remove-LMEntry`
+
+Explicitely test if the JSON has been modified in any way.
 
 ## ProcessAllowed
 
