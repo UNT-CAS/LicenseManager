@@ -35,7 +35,12 @@ function Initialize-LMEntry {
     Write-Verbose "[Initialize-LMEntry] Bound Parameters: $($MyInvocation.BoundParameters | Out-String)"
     Write-Verbose "[Initialize-LMEntry] Unbound Parameters: $($MyInvocation.UnboundParameters | Out-String)"
     
-    . "${PSScriptRoot}\Add-LMEntry.ps1"
+    <#
+        The if statements are required for Pester testing.
+    #>
+    if (-not (Get-Command 'Add-LMEntry' -ErrorAction SilentlyContinue)) {
+        . "${PSScriptRoot}\Add-LMEntry.ps1"
+    }
 
     Write-Verbose "[Initialize-LMEntry] Ensure LicenseManager DirectoryPath Exists: $($LicenseManager.DirectoryPath)"
     New-Item -ItemType Directory -Path $LicenseManager.DirectoryPath -Force | Write-Verbose

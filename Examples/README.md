@@ -131,3 +131,11 @@ Explicitely test if the JSON has been modified in any way.
 - Function Tests: `Assert-LMEntry`
 
 We will ensure the call to `Assert-LMEntry` returns the same as the value of thie *main key*.
+
+## Processes
+
+- Type: `[hashtable[]]`
+- Default: `@()`
+- Function Tests: `Initialize-LMEntry`
+
+This is the list of processes to return with the mocked `Get-Process` call.
