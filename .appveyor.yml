@@ -11,7 +11,7 @@ environment:
   PSGalleryApiKey:
     secure: Xpt1sogACnm41S2/1LmhjIl1zn/s1u1dcwNdhLcUh8RA8eOSGaMGB8Ce8B5svBzg
   CODECOV_TOKEN:
-    secure: FTZwENCnOORLZL4p1ijHk5KhOmbsfSgj/sxG4NVtv8SDH8A8qVBHlnCbluhZTTIm
+    secure: W18DapjYmwNINy8gyLl30FmNUIzLYE9K2hAMZhE3FJpa/ObmvB5t1d/xxgD0cn+R
 
 
 
