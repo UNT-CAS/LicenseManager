@@ -204,7 +204,10 @@ WshShell.Popup "{0}", {1}, "{2}", {3}
     Invoke-AsUser -User $ProcessUserName -Command $blockedAppVBS -IsVBScript
 
     Write-Verbose "[Deny-LMEntry] Stopping Process: ${ProcessId} ${process} $($process.Username)"
-    $process | Stop-Process -Force
+    Stop-Process -Id $ProcessId -Force
+
+    Write-Verbose "[Deny-LMEntry] Logging Denial..."
+    Write-LMEntryDenial -LicenseManager $LicenseManager -ProcessName $ProcessName -ProcessId $ProcessId -ProcessUserName $ProcessUserName
 }
 
 
