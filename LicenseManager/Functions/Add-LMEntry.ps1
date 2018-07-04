@@ -63,7 +63,7 @@ function Add-LMEntry {
     }
 
     $jsonChangeMade = $false
-    if ($jsonFilePath.Length -gt 0 -and -not ([string]::IsNullOrEmpty((Get-Content D:\Temp\LicenseManager\notepad.exe.json).Trim()))) {
+    if ($jsonFilePath.Length -gt 0 -and -not ([string]::IsNullOrEmpty((Get-Content $jsonFilePath).Trim()))) {
         Write-Verbose "[Add-LMEntry] JSON file is NOT empty."
         
         $jsonInfo = Get-Content -LiteralPath $jsonFilePath | Out-String | ConvertFrom-Json
