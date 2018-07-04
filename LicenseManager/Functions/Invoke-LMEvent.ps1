@@ -26,7 +26,7 @@ function Invoke-LMEvent {
         $Action,
 
         [Parameter(Mandatory = $true)]
-        [System.Management.Automation.PSEventArgs]
+        # [System.Management.Automation.PSEventArgs]
         $LMEvent,
         
         [Parameter(Mandatory = $true)]
@@ -36,15 +36,26 @@ function Invoke-LMEvent {
     Write-Verbose "[Invoke-LMEvent] Bound Parameters: $($MyInvocation.BoundParameters | Out-String)"
     Write-Verbose "[Invoke-LMEvent] Unbound Parameters: $($MyInvocation.UnboundParameters | Out-String)"
     
-    . "${PSScriptRoot}\Add-LMEntry.ps1"
-    . "${PSScriptRoot}\Assert-LMEntry.ps1"
-    . "${PSScriptRoot}\Deny-LMEntry.ps1"
-    . "${PSScriptRoot}\Remove-LMEntry.ps1"
+    <#
+        The if statements are required for Pester testing.
+    #>
+    if (-not (Get-Command 'Add-LMEntry' -ErrorAction SilentlyContinue)) {
+        . "${PSScriptRoot}\Add-LMEntry.ps1"
+    }
+    if (-not (Get-Command 'Add-LMEntry' -ErrorAction SilentlyContinue)) {
+        . "${PSScriptRoot}\Assert-LMEntry.ps1"
+    }
+    if (-not (Get-Command 'Add-LMEntry' -ErrorAction SilentlyContinue)) {
+        . "${PSScriptRoot}\Deny-LMEntry.ps1"
+    }
+    if (-not (Get-Command 'Add-LMEntry' -ErrorAction SilentlyContinue)) {
+        . "${PSScriptRoot}\Remove-LMEntry.ps1"
+    }
 
     Write-Verbose "[Invoke-LMEvent] LMEvent: $($LMEvent | Out-String)"
     Write-Verbose "[Invoke-LMEvent] LMEvent SourceEventArgs: $($LMEvent.SourceEventArgs | Out-String)"
-    Write-Verbose "[Invoke-LMEvent] LMEvent SourceEventArgs NewEvent All: $($LMEvent.SourceEventArgs.NewEvent | Select * | Out-String)"
-    Write-Verbose "[Invoke-LMEvent] LMEvent SourceEventArgs NewEvent CimInstanceProperties: $($LMEvent.SourceEventArgs.NewEvent.CimInstanceProperties | Select * | Out-String)"
+    Write-Verbose "[Invoke-LMEvent] LMEvent SourceEventArgs NewEvent All: $($LMEvent.SourceEventArgs.NewEvent | Select-Object * | Out-String)"
+    Write-Verbose "[Invoke-LMEvent] LMEvent SourceEventArgs NewEvent CimInstanceProperties: $($LMEvent.SourceEventArgs.NewEvent.CimInstanceProperties | Select-Object * | Out-String)"
     
     $ProcessName = $LMEvent.SourceEventArgs.NewEvent.ProcessName
     Write-Verbose "[Invoke-LMEvent] ProcessName:  ${ProcessName}"

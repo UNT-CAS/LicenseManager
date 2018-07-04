@@ -61,6 +61,14 @@ See the fu
 
 *Note: adding it to the file as well would cause and error that I could easily fix, but I don't care to.*
 
+## AssertReturns
+
+- Type: `[bool]`
+- Default: `$false`
+- Function Tests: `Invoke-LMEvent`
+
+Sets how the mocked `Assert-LMEntry` should return. This is really only in play when the Action is Start.
+
 ## ExistingCsv
 
 - Type: `[bool]` or `[string]`
