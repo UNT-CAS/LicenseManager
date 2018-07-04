@@ -10,7 +10,7 @@
     }
     'Pester'           = 'latest'  # Tested with: 4.3.1
     'powershell-yaml'  = 'latest'  # Tested with: 0.3.2
-    # 'psake'            = 'latest'  # Tested with: 4.7.0
+    'psake'            = 'latest'  # Tested with: 4.7.0
     'PSDeploy'         = 'latest'  # Tested with: 0.2.3
     'PSScriptAnalyzer' = 'latest'  # Tested with: 1.11.0
     'CodeCovIo.psm1'   = @{
