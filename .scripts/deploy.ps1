@@ -7,8 +7,8 @@ Write-Host "[Deploy] PSScriptRootParent: ${PSScriptRootParent}" -Foregroundcolor
 Write-Host "[Deploy] APPVEYOR_PROJECT_NAME: ${env:APPVEYOR_PROJECT_NAME}" -Foregroundcolor 'Blue' -BackgroundColor 'Magenta'
 
 Deploy Module {
-    By PSGalleryModule OneDriveDsc {
-        FromSource "${PSScriptRootParent}\BuildOutput\OneDriveDsc"
+    By PSGalleryModule LicenseManager {
+        FromSource "${PSScriptRootParent}\BuildOutput\LicenseManager"
         To PSGallery
         # Tagged Testing
         WithOptions @{
