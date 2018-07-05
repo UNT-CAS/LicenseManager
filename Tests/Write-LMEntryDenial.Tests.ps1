@@ -47,7 +47,7 @@ Describe $testFile.Name {
             }
     
             It "Write-LMEntryDenial" {
-                { Write-LMEntryDenial @lmEntry -Verbose } | Should Not Throw
+                { Write-LMEntryDenial @lmEntry } | Should Not Throw
             }
 
             It "Confirm CSV exists (True): ${csvFilePath}" {

@@ -53,7 +53,7 @@ Describe $testFile.Name {
             }
     
             It "Assert-LMEntry" {
-                { $script:lmEntryAssertation = Assert-LMEntry @lmEntry -Verbose } | Should Not Throw
+                { $script:lmEntryAssertation = Assert-LMEntry @lmEntry } | Should Not Throw
             }
     
             It "Confirm JSON exists (${jsonFilePathShouldInitiallyExist}): ${jsonFilePath}" {

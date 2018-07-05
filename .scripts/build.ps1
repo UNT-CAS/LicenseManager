@@ -30,14 +30,13 @@ $ErrorActionPreference = 'Stop'
 $script:thisModuleName = 'LicenseManager'
 $script:PSScriptRootParent = Split-Path $PSScriptRoot -Parent
 $script:ManifestJsonFile = "${PSScriptRootParent}\${thisModuleName}\Manifest.json"
-$script:BuildOutput = "${PSScriptRootParent}\BuildOutput"
+$script:BuildOutput = "${PSScriptRootParent}\dev\BuildOutput"
 
 $script:Manifest = @{}
 $Manifest_obj = Get-Content $script:ManifestJsonFile | ConvertFrom-Json
 $Manifest_obj | Get-Member -MemberType Properties | ForEach-Object { $script:Manifest.Set_Item($_.Name, $Manifest_obj.($_.Name)) }
 
 $script:Manifest_ModuleName = $null
-$script:Manifest_ResourceName = $null
 $script:ParentModulePath = $null
 $script:ResourceModulePath = $null
 $script:SystemModuleLocation = $null
@@ -49,10 +48,9 @@ if (-not $env:CI) {
     (Get-Module $Manifest.ModuleName -ListAvailable -Refresh).ModuleBase | Remove-Item -Recurse -Force -ErrorAction 'SilentlyContinue'
 }
 
-Write-Verbose "[BUILD] Properties Keys: $($Properties.Keys -join ', ')" -Verbose
-Write-Verbose "[BUILD] Properties.SkipBootstrap: $($Properties.SkipBootstrap)" -Verbose
-Write-Verbose "[BUILD] DependsBootstrap: ${script:DependsBootstrap}" -Verbose
-
+Write-Host "[BUILD] Properties Keys: $($Properties.Keys -join ', ')" -ForegroundColor Magenta
+Write-Host "[BUILD] Properties.SkipBootstrap: $($Properties.SkipBootstrap)" -ForegroundColor Magenta
+Write-Host "[BUILD] DependsBootstrap: ${script:DependsBootstrap}" -ForegroundColor Magenta
 
 # Parameters:
 Properties {
@@ -66,12 +64,9 @@ Properties {
     $script:Manifest.Copyright = $script:Manifest.Copyright -f [DateTime]::Now.Year
 
     $script:Manifest_ModuleName = $script:Manifest.ModuleName
-    $script:Manifest_ResourceName = $script:Manifest.ResourceName
     $script:Manifest.Remove('ModuleName')
-    $script:Manifest.Remove('ResourceName')
 
     $script:ParentModulePath = "${script:BuildOutput}\${script:Manifest_ModuleName}"
-    $script:ResourceModulePath = "${script:ParentModulePath}\DSCResources\${script:Manifest_ResourceName}"
 
     $PSModulePath1 = $env:PSModulePath.Split(';')[1]
     $script:SystemModuleLocation = "${PSModulePath1}\${script:Manifest_ModuleName}"
@@ -79,12 +74,8 @@ Properties {
     $script:Version = [string](& "${PSScriptRootParent}\.scripts\version.ps1")
 }
 
-
-
 # Start psake builds
-Task default -Depends InstallModule
-
-
+Task default -Depends TestModule
 
 <#
     Bootstrap PSDepend:
@@ -93,29 +84,27 @@ Task default -Depends InstallModule
 #>
 Task Bootstrap -Description "Bootstrap & Run PSDepend" {
     $PSDepend = Get-Module -Name 'PSDepend'
-    Write-Verbose "[BUILD Bootstrap] PSDepend: $($PSDepend.Version)"
-    if (Get-Module -Name 'PSDepend')
+    Write-Host "[BUILD Bootstrap] PSDepend: $($PSDepend.Version)" -ForegroundColor Magenta
+    if ($PSDepend)
     {
-        Write-Verbose "[BUILD Bootstrap] PSDepend: Updating..."
+        Write-Host "[BUILD Bootstrap] PSDepend: Updating..." -ForegroundColor Magenta
         $PSDepend | Update-Module -Force
     }
     else
     {
-        Write-Verbose "[BUILD Bootstrap] PSDepend: Installing..."
+        Write-Host "[BUILD Bootstrap] PSDepend: Installing..." -ForegroundColor Magenta
         Install-Module -Name 'PSDepend' -Force
     }
 
-    Write-Verbose "[BUILD Bootstrap] PSDepend: Installing..."
+    Write-Host "[BUILD Bootstrap] PSDepend: Installing..." -ForegroundColor Magenta
     $PSDepend = Import-Module -Name 'PSDepend' -PassThru
-    Write-Verbose "[BUILD Bootstrap] PSDepend: $($PSDepend.Version)"
+    Write-Host "[BUILD Bootstrap] PSDepend: $($PSDepend.Version)" -ForegroundColor Magenta
 
-    Write-Verbose "[BUILD Bootstrap] PSDepend: Invoking '${PSScriptRootParent}\REQUIREMENTS.psd1'"
+    Write-Host "[BUILD Bootstrap] PSDepend: Invoking '${PSScriptRootParent}\REQUIREMENTS.psd1'" -ForegroundColor Magenta
     Push-Location $PSScriptRootParent
     Invoke-PSDepend -Path "${PSScriptRootParent}\REQUIREMENTS.psd1" -Force
     Pop-Location
 }
-
-
 
 <#
     Preperation and Setup:
@@ -124,30 +113,30 @@ Task Bootstrap -Description "Bootstrap & Run PSDepend" {
         - Establish Module/Resource Locations/Paths.
 #>
 Task SetupModule -Description "Prepare and Setup Module" -Depends $DependsBootstrap {
-    $dir = New-Item -ItemType 'Directory' -Path $script:ResourceModulePath -Force
-    Write-Verbose "[BUILD SetupModule] New Directory: ${dir}"
-
     $script:Manifest.Path = "${script:ParentModulePath}\${script:Manifest_ModuleName}.psd1"
-    $script:Manifest.DscResourcesToExport = $script:Manifest_ResourceName
     $script:Manifest.ModuleVersion = $script:Version
-    Write-Verbose "[BUILD SetupModule] New-ModuleManifest: $($script:Manifest | ConvertTo-Json -Compress)"
+    Write-Host "[BUILD SetupModule] New-ModuleManifest: $($script:Manifest | ConvertTo-Json -Compress)" -ForegroundColor Magenta
     New-ModuleManifest @script:Manifest
 
-    $script:Manifest.Path = "${script:ResourceModulePath}\${script:Manifest_ResourceName}.psd1"
-    $script:Manifest.RootModule = "${script:Manifest_ResourceName}.schema.psm1"
-    Write-Verbose "[BUILD SetupModule] New-ModuleManifest: $($script:Manifest | ConvertTo-Json -Compress)"
-    New-ModuleManifest @script:Manifest
-
-    $Copy_Item = @{
-        LiteralPath = "${PSScriptRootParent}\${script:thisModuleName}\${script:thisModuleName}.schema.psm1"
-        Destination = $script:ResourceModulePath
+    $copyItem = @{
+        LiteralPath = "${PSScriptRootParent}\${script:thisModuleName}\${script:thisModuleName}.psm1"
+        Destination = $script:ParentModulePath
         Force       = $true
     }
-    Write-Verbose "[BUILD SetupModule] Copy-Item: $($Copy_Item | ConvertTo-Json -Compress)"
-    Copy-Item @Copy_Item
+    Write-Host "[BUILD SetupModule] Copy-Item: $($copyItem | ConvertTo-Json -Compress)" -ForegroundColor Magenta
+    Copy-Item @copyItem
+
+    foreach ($directory in (Get-ChildItem "${PSScriptRootParent}\${thisModuleName}" -Directory)) {
+        $copyItem = @{
+            LiteralPath = $directory.FullName
+            Destination = $script:ParentModulePath
+            Recurse     = $true
+            Force       = $true
+        }
+        Write-Host "[BUILD SetupModule] Copy-Item: $($copyItem | ConvertTo-Json -Compress)" -ForegroundColor Magenta
+        Copy-Item @copyItem
+    }
 }
-
-
 
 <#
     Put Module/Resource in locations accessible by DSC:
@@ -161,7 +150,7 @@ Task InstallModule -Description "Prepare and Setup/Install Module" -Depends Setu
         Path     = $script:SystemModuleLocation
         Force    = $true
     }
-    Write-Verbose "[BUILD SetupModule] New-Item: $($New_Item | ConvertTo-Json -Compress)"
+    Write-Host "[BUILD InstallModule] New-Item: $($New_Item | ConvertTo-Json -Compress)" -ForegroundColor Magenta
     New-Item @New_Item | Out-Null
 
     $Copy_Item = @{
@@ -170,6 +159,44 @@ Task InstallModule -Description "Prepare and Setup/Install Module" -Depends Setu
         Recurse     = $true
         Force       = $true
     }
-    Write-Verbose "[BUILD SetupModule] Copy-Item: $($Copy_Item | ConvertTo-Json -Compress)"
+    Write-Host "[BUILD InstallModule] Copy-Item: $($Copy_Item | ConvertTo-Json -Compress)" -ForegroundColor Magenta
     Copy-Item @Copy_Item
+}
+
+<#
+    Tests
+        - Pester
+        - CodeCov
+#>
+Task TestModule -Description "Run Pester Tests and CoeCoverage" -Depends InstallModule {
+    Write-Host "[BUILD TestModule] Import-Module ${env:Temp}\CodeCovIo.psm1" -ForegroundColor Magenta
+    Import-Module ${env:Temp}\CodeCovIo.psm1
+    
+    $invokePester = @{
+        Path = "${PSScriptRootParent}\Tests"
+        CodeCoverage = (Get-ChildItem "${PSScriptRootParent}\${thisModuleName}" -Recurse -Include '*.psm1', '*.ps1').FullName
+        PassThru = $true
+        OutputFormat = 'NUnitXml'
+        OutputFile   = ([IO.FileInfo] '{0}\dev\TestResults_PS{1}_{2}.xml' -f $PSScriptRootParent, $PSVersionTable.PSVersion, (Get-Date -Format 'O').Replace(':', ''))
+    }
+    Write-Host "[BUILD TestModule] Invoke-Pester $($invokePester | ConvertTo-Json)" -ForegroundColor Magenta
+    $res = Invoke-Pester @invokePester
+    Write-Host "[BUILD TestModule] Pester Result: $($res | ConvertTo-Json)" -ForegroundColor Magenta
+    
+    if (($env:CI -eq 'True') -and ($env:APPVEYOR -eq 'True')) {
+        Write-Host "[BUILD TestModule] We're in AppVeyor; uploading results..." -ForegroundColor Magenta
+        (New-Object 'System.Net.WebClient').UploadFile("https://ci.appveyor.com/api/testresults/nunit/${env:APPVEYOR_JOB_ID}", (Resolve-Path $invokePester.OutputFile))
+    }
+    
+    $exportCodeCovIoJson = @{
+        CodeCoverage = $res.CodeCoverage
+        RepoRoot     = $PSScriptRootParent
+        Path         = ([string] $invokePester.OutputFile).Replace('.xml', '.json')
+    }
+    Write-Host "[BUILD TestModule] Export-CodeCovIoJson: $($exportCodeCovIoJson | ConvertTo-Json)" -ForegroundColor Magenta
+    Export-CodeCovIoJson @exportCodeCovIoJson
+
+    if ($res.FailedCount -gt 0) {
+        Throw "$($res.FailedCount) tests failed."
+    }
 }

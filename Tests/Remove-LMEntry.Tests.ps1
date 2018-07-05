@@ -52,7 +52,7 @@ Describe $testFile.Name {
             }
     
             It "Remove-LMEntry" {
-                { Remove-LMEntry @lmEntry -Verbose } | Should Not Throw
+                { Remove-LMEntry @lmEntry } | Should Not Throw
             }
 
             if ($test.ExpectedJson) {

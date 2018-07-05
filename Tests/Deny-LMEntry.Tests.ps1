@@ -87,7 +87,7 @@ Describe $testFile.Name {
             }
     
             It "Deny-LMEntry" {
-                { Deny-LMEntry @lmEntry -Verbose } | Should Not Throw
+                { Deny-LMEntry @lmEntry } | Should Not Throw
             }
     
             It "Confirm JSON exists (${jsonFilePathShouldInitiallyExist}): ${jsonFilePath}" {

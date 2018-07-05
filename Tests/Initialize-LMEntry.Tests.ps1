@@ -40,7 +40,7 @@ Describe $testFile.Name {
             [hashtable] $lmEntry = $test.Parameters
             
             It "Initialize-LMEntry" {
-                { Initialize-LMEntry @lmEntry -Verbose } | Should Not Throw
+                { Initialize-LMEntry @lmEntry } | Should Not Throw
             }
     
             It "Was Called: Add-LMEntry" {

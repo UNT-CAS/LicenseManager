@@ -55,7 +55,7 @@ Describe $testFile.Name {
             [hashtable] $lmEntry = $test.Parameters
             
             It "Invoke-LMEvent" {
-                { Invoke-LMEvent @lmEntry -Verbose } | Should Not Throw
+                { Invoke-LMEvent @lmEntry } | Should Not Throw
             }
     
             if ($test.Parameters.Action -eq 'Start') {

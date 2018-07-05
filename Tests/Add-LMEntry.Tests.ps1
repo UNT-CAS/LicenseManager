@@ -52,7 +52,7 @@ Describe $testFile.Name {
             }
     
             It "Add-LMEntry" {
-                { Add-LMEntry @lmEntry -Verbose } | Should Not Throw
+                { Add-LMEntry @lmEntry } | Should Not Throw
             }
     
             It "Confirm JSON exists (True): ${jsonFilePath}" {
