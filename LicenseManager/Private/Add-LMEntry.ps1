@@ -90,7 +90,30 @@ function Add-LMEntry {
             } else {
                 Write-Output $currentJsonInfo
             }
-        } | ConvertTo-Json
+        }
+
+        if (-not $jsonChangeMade) {
+            Write-Verbose "[Add-LMEntry] JSON doesn't have an existing entry."
+
+            $appendJsonInfo = @{
+                ComputerName = $env:COMPUTERNAME
+                UserName     = $ProcessUserName
+                ProcessId    = @($ProcessId)
+                TimeStamp    = (Get-Date -Format 'O')
+            }
+
+            if ($newJsonInfo -is [array]) {
+                [System.Collections.ArrayList] $newJsonInfo = $newJsonInfo
+            } else {
+                [System.Collections.ArrayList] $newJsonInfo = @( $newJsonInfo )
+            }
+
+            $newJsonInfo.Add($appendJsonInfo) | Out-Null
+
+            Write-Verbose "[Add-LMEntry] JSON: $($newJsonInfo | Out-String)"
+
+            $jsonChangeMade = $true
+        }
     } else {
         Write-Verbose "[Add-LMEntry] JSON file is empty."
 
@@ -99,13 +122,13 @@ function Add-LMEntry {
             UserName = $ProcessUserName
             ProcessId = @($ProcessId)
             TimeStamp = (Get-Date -Format 'O')
-        } | ConvertTo-Json
-        Write-Verbose "[Add-LMEntry] JSON: [$($newJsonInfo | Out-String)]"
+        }
 
         $jsonChangeMade = $true
     }
 
     if ($jsonChangeMade) {
+        [string] $newJsonInfo = $newJsonInfo | ConvertTo-Json
         Write-Verbose "[Add-LMEntry] New JSON: $($newJsonInfo | Out-String)"
     } else {
         Write-Verbose "[Add-LMEntry] No Change Made; nothing new to show."
