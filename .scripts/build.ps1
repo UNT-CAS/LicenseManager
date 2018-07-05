@@ -25,8 +25,6 @@
 #>
 $ErrorActionPreference = 'Stop'
 
-
-
 $script:thisModuleName = 'LicenseManager'
 $script:PSScriptRootParent = Split-Path $PSScriptRoot -Parent
 $script:ManifestJsonFile = "${PSScriptRootParent}\${thisModuleName}\Manifest.json"
@@ -48,9 +46,14 @@ if (-not $env:CI) {
     (Get-Module $Manifest.ModuleName -ListAvailable -Refresh).ModuleBase | Remove-Item -Recurse -Force -ErrorAction 'SilentlyContinue'
 }
 
-Write-Host "[BUILD] Properties Keys: $($Properties.Keys -join ', ')" -ForegroundColor Magenta
-Write-Host "[BUILD] Properties.SkipBootstrap: $($Properties.SkipBootstrap)" -ForegroundColor Magenta
-Write-Host "[BUILD] DependsBootstrap: ${script:DependsBootstrap}" -ForegroundColor Magenta
+if (($env:CI -ne 'True') -and ($env:APPVEYOR -ne 'True')) {
+    function Push-AppveyorArtifact { param($FileName) Write-Host "[BUILD Push-AppveyorArtifact] Not in AppVeyor; skipping ..." -ForegroundColor Magenta }
+    function Add-AppveyorMessage { param($Message) Write-Host "[BUILD Add-AppveyorMessage] ${Message}" -ForegroundColor Magenta }
+}
+
+Add-AppveyorMessage "[BUILD] Properties Keys: $($Properties.Keys -join ', ')"
+Add-AppveyorMessage "[BUILD] Properties.SkipBootstrap: $($Properties.SkipBootstrap)"
+Add-AppveyorMessage "[BUILD] DependsBootstrap: ${script:DependsBootstrap}"
 
 # Parameters:
 Properties {
@@ -75,7 +78,7 @@ Properties {
 }
 
 # Start psake builds
-Task default -Depends TestModule
+Task default -Depends Compress-Archive
 
 <#
     Bootstrap PSDepend:
@@ -84,23 +87,23 @@ Task default -Depends TestModule
 #>
 Task Bootstrap -Description "Bootstrap & Run PSDepend" {
     $PSDepend = Get-Module -Name 'PSDepend'
-    Write-Host "[BUILD Bootstrap] PSDepend: $($PSDepend.Version)" -ForegroundColor Magenta
+    Add-AppveyorMessage "[BUILD Bootstrap] PSDepend: $($PSDepend.Version)"
     if ($PSDepend)
     {
-        Write-Host "[BUILD Bootstrap] PSDepend: Updating..." -ForegroundColor Magenta
+        Add-AppveyorMessage "[BUILD Bootstrap] PSDepend: Updating..."
         $PSDepend | Update-Module -Force
     }
     else
     {
-        Write-Host "[BUILD Bootstrap] PSDepend: Installing..." -ForegroundColor Magenta
+        Add-AppveyorMessage "[BUILD Bootstrap] PSDepend: Installing..."
         Install-Module -Name 'PSDepend' -Force
     }
 
-    Write-Host "[BUILD Bootstrap] PSDepend: Installing..." -ForegroundColor Magenta
+    Add-AppveyorMessage "[BUILD Bootstrap] PSDepend: Installing..."
     $PSDepend = Import-Module -Name 'PSDepend' -PassThru
-    Write-Host "[BUILD Bootstrap] PSDepend: $($PSDepend.Version)" -ForegroundColor Magenta
+    Add-AppveyorMessage "[BUILD Bootstrap] PSDepend: $($PSDepend.Version)"
 
-    Write-Host "[BUILD Bootstrap] PSDepend: Invoking '${PSScriptRootParent}\REQUIREMENTS.psd1'" -ForegroundColor Magenta
+    Add-AppveyorMessage "[BUILD Bootstrap] PSDepend: Invoking '${PSScriptRootParent}\REQUIREMENTS.psd1'"
     Push-Location $PSScriptRootParent
     Invoke-PSDepend -Path "${PSScriptRootParent}\REQUIREMENTS.psd1" -Force
     Pop-Location
@@ -117,7 +120,7 @@ Task SetupModule -Description "Prepare and Setup Module" -Depends $DependsBootst
 
     $script:Manifest.Path = "${script:ParentModulePath}\${script:Manifest_ModuleName}.psd1"
     $script:Manifest.ModuleVersion = $script:Version
-    Write-Host "[BUILD SetupModule] New-ModuleManifest: $($script:Manifest | ConvertTo-Json -Compress)" -ForegroundColor Magenta
+    Add-AppveyorMessage "[BUILD SetupModule] New-ModuleManifest: $($script:Manifest | ConvertTo-Json -Compress)"
     New-ModuleManifest @script:Manifest
 
     $copyItem = @{
@@ -125,7 +128,7 @@ Task SetupModule -Description "Prepare and Setup Module" -Depends $DependsBootst
         Destination = $script:ParentModulePath
         Force       = $true
     }
-    Write-Host "[BUILD SetupModule] Copy-Item: $($copyItem | ConvertTo-Json -Compress)" -ForegroundColor Magenta
+    Add-AppveyorMessage "[BUILD SetupModule] Copy-Item: $($copyItem | ConvertTo-Json -Compress)"
     Copy-Item @copyItem
 
     foreach ($directory in (Get-ChildItem "${PSScriptRootParent}\${thisModuleName}" -Directory)) {
@@ -135,7 +138,7 @@ Task SetupModule -Description "Prepare and Setup Module" -Depends $DependsBootst
             Recurse     = $true
             Force       = $true
         }
-        Write-Host "[BUILD SetupModule] Copy-Item: $($copyItem | ConvertTo-Json -Compress)" -ForegroundColor Magenta
+        Add-AppveyorMessage "[BUILD SetupModule] Copy-Item: $($copyItem | ConvertTo-Json -Compress)"
         Copy-Item @copyItem
     }
 }
@@ -152,7 +155,7 @@ Task InstallModule -Description "Prepare and Setup/Install Module" -Depends Setu
         Path     = $script:SystemModuleLocation
         Force    = $true
     }
-    Write-Host "[BUILD InstallModule] New-Item: $($New_Item | ConvertTo-Json -Compress)" -ForegroundColor Magenta
+    Add-AppveyorMessage "[BUILD InstallModule] New-Item: $($New_Item | ConvertTo-Json -Compress)"
     New-Item @New_Item | Out-Null
 
     $Copy_Item = @{
@@ -161,7 +164,7 @@ Task InstallModule -Description "Prepare and Setup/Install Module" -Depends Setu
         Recurse     = $true
         Force       = $true
     }
-    Write-Host "[BUILD InstallModule] Copy-Item: $($Copy_Item | ConvertTo-Json -Compress)" -ForegroundColor Magenta
+    Add-AppveyorMessage "[BUILD InstallModule] Copy-Item: $($Copy_Item | ConvertTo-Json -Compress)"
     Copy-Item @Copy_Item
 }
 
@@ -171,7 +174,7 @@ Task InstallModule -Description "Prepare and Setup/Install Module" -Depends Setu
         - CodeCov
 #>
 Task TestModule -Description "Run Pester Tests and CoeCoverage" -Depends InstallModule {
-    Write-Host "[BUILD TestModule] Import-Module ${env:Temp}\CodeCovIo.psm1" -ForegroundColor Magenta
+    Add-AppveyorMessage "[BUILD TestModule] Import-Module ${env:Temp}\CodeCovIo.psm1"
     Import-Module ${env:Temp}\CodeCovIo.psm1
     
     $invokePester = @{
@@ -181,24 +184,39 @@ Task TestModule -Description "Run Pester Tests and CoeCoverage" -Depends Install
         OutputFormat = 'NUnitXml'
         OutputFile   = ([IO.FileInfo] '{0}\dev\CodeCoverage.xml' -f $PSScriptRootParent)
     }
-    Write-Host "[BUILD TestModule] Invoke-Pester $($invokePester | ConvertTo-Json)" -ForegroundColor Magenta
+    Add-AppveyorMessage "[BUILD TestModule] Invoke-Pester $($invokePester | ConvertTo-Json)"
     $res = Invoke-Pester @invokePester
-    Write-Host "[BUILD TestModule] Pester Result: $($res | ConvertTo-Json)" -ForegroundColor Magenta
+    Add-AppveyorMessage "[BUILD TestModule] Pester Result: $($res | ConvertTo-Json)"
     
-    if (($env:CI -eq 'True') -and ($env:APPVEYOR -eq 'True')) {
-        Write-Host "[BUILD TestModule] We're in AppVeyor; uploading results..." -ForegroundColor Magenta
-        (New-Object 'System.Net.WebClient').UploadFile("https://ci.appveyor.com/api/testresults/nunit/${env:APPVEYOR_JOB_ID}", (Resolve-Path $invokePester.OutputFile))
-    }
+    Add-AppveyorMessage "[BUILD TestModule] Adding Results to Artifacts..."
+    # (New-Object 'System.Net.WebClient').UploadFile("https://ci.appveyor.com/api/testresults/nunit/${env:APPVEYOR_JOB_ID}", (Resolve-Path $invokePester.OutputFile))
+    Push-AppveyorArtifact -FileName (Resolve-Path $invokePester.OutputFile)
     
     $exportCodeCovIoJson = @{
         CodeCoverage = $res.CodeCoverage
         RepoRoot     = $PSScriptRootParent
         Path         = ([string] $invokePester.OutputFile).Replace('.xml', '.json')
     }
-    Write-Host "[BUILD TestModule] Export-CodeCovIoJson: $($exportCodeCovIoJson | ConvertTo-Json)" -ForegroundColor Magenta
+    Add-AppveyorMessage "[BUILD TestModule] Export-CodeCovIoJson: $($exportCodeCovIoJson | ConvertTo-Json)"
     Export-CodeCovIoJson @exportCodeCovIoJson
+
+    Add-AppveyorMessage "[BUILD TestModule] Adding Results to Artifacts..."
+    Push-AppveyorArtifact -FileName (Resolve-Path $exportCodeCovIoJson.Path)
+    
+    Add-AppveyorMessage "[BUILD TestModule] Uploading CodeCov.io Report ..."
+    & "${env:Temp}\Codecov\codecov.exe" -f .\dev\CodeCoverage.json
 
     if ($res.FailedCount -gt 0) {
         Throw "$($res.FailedCount) tests failed."
     }
+}
+
+<#
+    Compress things for releasing
+#>
+Task CompressModule -Description "Compress module for easy download from GitHub" -Depends InstallModule {
+    Add-AppveyorMessage "[BUILD CompressModule] Import-Module ${env:Temp}\CodeCovIo.psm1"
+    Compress-Archive -Path $script:ParentModulePath -DestinationPath "${script:ParentModulePath}.zip"
+
+    Push-AppveyorArtifact -FileName (Resolve-Path "${script:ParentModulePath}.zip")
 }

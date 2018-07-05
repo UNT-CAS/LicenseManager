@@ -1,6 +1,6 @@
 image: WMF 5
 
-version: 0.1.{build}
+version: 0.2.{build}
 
 # Skip on updates to the readme.
 # We can force this by adding [skip ci] or [ci skip] anywhere in commit message 
@@ -29,15 +29,23 @@ build_script:
 
 
 
-after_test:
-# Upload coverage report to Codecov.io
-- ps: |
-    & "${env:Temp}\Codecov\codecov.exe" -f .\dev\CodeCoverage.json
+deploy:
+  release: v$(APPVEYOR_BUILD_VERSION)
+  description: LicenseManager v$(appveyor_build_version)
+  provider: GitHub
+  auth_token:
+    secure: 5J0ugv6ihHcLzt2sHc0rU2F+y/htAz8nVERuqPAdnbsYEdyFBJy8POMwWYMwHU4j
+  artifact: /.*\.nupkg/
+  draft: false
+  prerelease: true
+  on:
+    branch: master                 # release from master branch only
+    appveyor_repo_tag: true        # deploy on tag push only
 
 
 
-deploy_script:
+on_success:
 # If build was started by pushed tag; deploy it.
 - ps: |
-    Write-Host "[AppVeyor] APPVEYOR_REPO_TAG: ${env:APPVEYOR_REPO_TAG}" -Foregroundcolor 'Blue' -BackgroundColor 'Magenta'
-    if ($env:APPVEYOR_REPO_TAG -eq 'true') { Invoke-PSDeploy -Path '.\.scripts\deploy.ps1' -Force }
+    Write-Host "[AppVeyor] On Success; deploying ..." -Foregroundcolor Green
+    Invoke-PSDeploy -Path '.\.scripts\deploy.ps1' -Force
