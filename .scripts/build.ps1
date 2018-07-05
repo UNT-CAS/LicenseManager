@@ -177,7 +177,7 @@ Task TestModule -Description "Run Pester Tests and CoeCoverage" -Depends Install
         CodeCoverage = (Get-ChildItem "${PSScriptRootParent}\${thisModuleName}" -Recurse -Include '*.psm1', '*.ps1').FullName
         PassThru = $true
         OutputFormat = 'NUnitXml'
-        OutputFile   = ([IO.FileInfo] '{0}\dev\TestResults_PS{1}_{2}.xml' -f $PSScriptRootParent, $PSVersionTable.PSVersion, (Get-Date -Format 'O').Replace(':', ''))
+        OutputFile   = ([IO.FileInfo] '{0}\dev\CodeCoverage.xml' -f $PSScriptRootParent)
     }
     Write-Host "[BUILD TestModule] Invoke-Pester $($invokePester | ConvertTo-Json)" -ForegroundColor Magenta
     $res = Invoke-Pester @invokePester
