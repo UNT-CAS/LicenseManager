@@ -1,6 +1,6 @@
-[![Build status](//ci.appveyor.com/api/projects/status/t3kx0sy41ouw7cry?svg=true)](https://ci.appveyor.com/project/VertigoRay/licensemanager)
-[![downloads](//img.shields.io/powershellgallery/dt/licensemanager.svg?label=downloads)](https://www.powershellgallery.com/packages/licensemanager)
-[![codecov](//codecov.io/gh/UNT-CAS/LicenseManager/branch/master/graph/badge.svg)](https://codecov.io/gh/UNT-CAS/LicenseManager)
+[![Build status](https://ci.appveyor.com/api/projects/status/t3kx0sy41ouw7cry?svg=true)](https://ci.appveyor.com/project/VertigoRay/licensemanager)
+[![downloads](https://img.shields.io/powershellgallery/dt/licensemanager.svg?label=downloads)](https://www.powershellgallery.com/packages/licensemanager)
+[![codecov](https://codecov.io/gh/UNT-CAS/LicenseManager/branch/master/graph/badge.svg)](https://codecov.io/gh/UNT-CAS/LicenseManager)
 
 Manage concurrent usage of software that doesn't use a smarter license server, such as Flex LM.
 
