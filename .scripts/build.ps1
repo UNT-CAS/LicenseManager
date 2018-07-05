@@ -113,6 +113,8 @@ Task Bootstrap -Description "Bootstrap & Run PSDepend" {
         - Establish Module/Resource Locations/Paths.
 #>
 Task SetupModule -Description "Prepare and Setup Module" -Depends $DependsBootstrap {
+    New-Item -ItemType Directory -Path $script:ParentModulePath -Force
+
     $script:Manifest.Path = "${script:ParentModulePath}\${script:Manifest_ModuleName}.psd1"
     $script:Manifest.ModuleVersion = $script:Version
     Write-Host "[BUILD SetupModule] New-ModuleManifest: $($script:Manifest | ConvertTo-Json -Compress)" -ForegroundColor Magenta
