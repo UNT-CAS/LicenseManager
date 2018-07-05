@@ -35,7 +35,7 @@ deploy:
   provider: GitHub
   auth_token:
     secure: 5J0ugv6ihHcLzt2sHc0rU2F+y/htAz8nVERuqPAdnbsYEdyFBJy8POMwWYMwHU4j
-  artifact: /.*\.nupkg/
+  artifact: /.*\.zip/
   draft: false
   prerelease: true
   on:
