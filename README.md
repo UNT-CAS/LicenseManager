@@ -9,15 +9,15 @@ Manage concurrent usage of software that doesn't use a smarter license server, s
 
 We have several pieces of software that don't use a license server.
 Because of this, we own *n* number of stand-alone licenses.
-When applicable, we can install this on as many computers as we want, such as in a VDI farm, and make it availble as long as we can control concurrency.
+When applicable, we can install this on as many computers as we want, such as in a VDI farm, and make it available as long as we can control concurrency.
 This is an attempt to control concurrency in these situations.
 
-I prefer to run this as a scheduled task that triggers at reboot and re-runs every 15 minutes or so; ensure:
+I prefer to run this as a scheduled task that triggers at reboot and re-runs every 15 minutes or so; ensures:
 
 - If it's already running, another one doesn't startup.
 - It's never forced to die after a timeout.
 
-This ensure that the process is always running. If it dies for some reason, we'll get it running again within 15 minutes
+This ensures that the process is always running. If it dies for some reason, we'll get it running again within 15 minutes
 
 # Quick Setup
 
@@ -84,7 +84,7 @@ Additionally, anytime a user is *denied*, an entry will be added to a CSV file t
 This allows a report to be generated so we can determine if we need to buy more licenses.
 
 This should likely be a UNC path.
-If you're running as `NT AUTHORITY\System`, be sure to grant *domain computers* read/write access to the the UNC path.
+If you're running as `NT AUTHORITY\System`, be sure to grant *domain computers* read/write access to the UNC path.
 
 ## Processes
 
