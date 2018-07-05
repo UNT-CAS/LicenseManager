@@ -109,6 +109,13 @@ objShell.Run """{0}"" {1}", 0
         }
 
         $vbscriptFile = New-TemporaryFile
+
+        Write-Verbose "[Deny-LMEntry][Invoke-AsUser] (Set) Fixing Permissions on VBS/TMP file."
+        $acl = Get-Acl $vbscriptFile
+        $accessRule = New-Object System.Security.AccessControl.FileSystemAccessRule('Everyone', 'Read', 'Allow')
+        $acl.SetAccessRule($accessRule)
+        Set-Acl $vbscriptFile $acl
+
         Write-Verbose "[Deny-LMEntry][Invoke-AsUser] (Set) Writing VBS (${vbscriptFile}): $($vbscript | Out-String)"
         $vbscript | Out-File -Encoding 'ascii' $vbscriptFile -Force
 
@@ -205,6 +212,11 @@ WshShell.Popup "{0}", {1}, "{2}", {3}
 
     Write-Verbose "[Deny-LMEntry] Stopping Process: ${ProcessId} ${process} $($process.Username)"
     Stop-Process -Id $ProcessId -Force
+
+    
+    if (-not (Get-Command 'Write-LMEntryDenial' -ErrorAction SilentlyContinue)) {
+        . "${PSScriptRoot}\Write-LMEntryDenial.ps1"
+    }
 
     Write-Verbose "[Deny-LMEntry] Logging Denial..."
     Write-LMEntryDenial -LicenseManager $LicenseManager -ProcessName $ProcessName -ProcessId $ProcessId -ProcessUserName $ProcessUserName
