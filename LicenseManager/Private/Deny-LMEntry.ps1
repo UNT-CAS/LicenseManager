@@ -110,13 +110,17 @@ objShell.Run """{0}"" {1}", 0
 
         $vbscriptFile = New-TemporaryFile
 
-        Write-Verbose "[Deny-LMEntry][Invoke-AsUser] (Set) Fixing Permissions on VBS/TMP file."
+        # Write-Verbose "[Deny-LMEntry][Invoke-AsUser] (Set) Fixing Permissions on VBS/TMP file."
         # $acl = Get-Acl $vbscriptFile
         # $accessRule = New-Object System.Security.AccessControl.FileSystemAccessRule('Everyone', 'Read', 'Allow')
         # $acl.SetAccessRule($accessRule)
         # Set-Acl $vbscriptFile $acl
-        & icacls $vbscriptFile /grant:r "Everyone":(OI)(CI)M
-
+        
+        # & icacls $vbscriptFile /grant:r "Everyone":(OI)(CI)M
+        
+        Write-Verbose "[Deny-LMEntry][Invoke-AsUser] (Set) Moving VBS/TMP file."
+        Move-Item -LiteralPath $vbscriptFile -Destination $env:SystemDrive -Force -Verbose
+        $vbscriptFile = "$env:SystemDrive\$($vbscriptFile.Name)"
 
         Write-Verbose "[Deny-LMEntry][Invoke-AsUser] (Set) Writing VBS (${vbscriptFile}): $($vbscript | Out-String)"
         $vbscript | Out-File -Encoding 'ascii' $vbscriptFile -Force
@@ -165,8 +169,11 @@ objShell.Run """{0}"" {1}", 0
             }
         }
 
-        Unregister-ScheduledTask -TaskName $scheduledTaskName -Confirm:$false
-        Remove-Item $vbscriptFile -Force
+        Write-Verbose "[Deny-LMEntry][Invoke-AsUser] (Set) Unregister ScheduledTask: ${scheduledTaskName}"
+        Unregister-ScheduledTask -TaskName $scheduledTaskName -Confirm:$false -Verbose
+        
+        Write-Verbose "[Deny-LMEntry][Invoke-AsUser] (Set) Delete VBS: ${vbscriptFile}"
+        Remove-Item $vbscriptFile -Force -Verbose
     } #/function private:Invoke-AsUser
 
     [IO.FileInfo] $jsonFilePath = "$($LicenseManager.DirectoryPath)\${ProcessName}.json"
