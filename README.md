@@ -70,6 +70,18 @@ The Parameter should look like this
 
 - Type: `[string]`
 
+This parameter defines the central location where all computers/servers will report their usage of specific products.
+Each product in the *Processes* parameter creates a JSON for storing the Process IDs (PID) of processes that we care about.
+The JSON stored will not count multiple PIDs on the same user/computer as a separate instance.
+Here are some JSON examples:
+
+- [One computer with one user running one process.](https://github.com/UNT-CAS/LicenseManager/blob/437a98297327b1b98659e0be484a4e39c4b4fe29/Examples/Assert-LMEntry.Process_ID_Additional_Added.psd1#L20-L27)
+- [One computer with one user running ten processes.](https://github.com/UNT-CAS/LicenseManager/blob/437a98297327b1b98659e0be484a4e39c4b4fe29/Examples/Assert-LMEntry.Process_ID_x10.psd1#L20-L27)
+- [Ten computers with one user running one process.](https://github.com/UNT-CAS/LicenseManager/blob/437a98297327b1b98659e0be484a4e39c4b4fe29/Examples/Add-LMEntry.Processes_x10.psd1#L16-L88)
+
+Additionally, anytime a user is *denied*, an entry will be added to a CSV file that will also be in this location.
+This allows a report to be generated so we can determine if we need to buy more licenses.
+
 This should likely be a UNC path.
 If you're running as `NT AUTHORITY\System`, be sure to grant *domain computers* read/write access to the the UNC path.
 
