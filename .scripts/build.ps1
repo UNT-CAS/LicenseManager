@@ -78,7 +78,7 @@ Properties {
 }
 
 # Start psake builds
-Task default -Depends Compress-Archive
+Task default -Depends CompressModule
 
 <#
     Bootstrap PSDepend:
@@ -214,7 +214,7 @@ Task TestModule -Description "Run Pester Tests and CoeCoverage" -Depends Install
 <#
     Compress things for releasing
 #>
-Task CompressModule -Description "Compress module for easy download from GitHub" -Depends InstallModule {
+Task CompressModule -Description "Compress module for easy download from GitHub" -Depends TestModule {
     Add-AppveyorMessage "[BUILD CompressModule] Import-Module ${env:Temp}\CodeCovIo.psm1"
     Compress-Archive -Path $script:ParentModulePath -DestinationPath "${script:ParentModulePath}.zip"
 
