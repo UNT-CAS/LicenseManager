@@ -1,6 +1,7 @@
 [![Build status](https://ci.appveyor.com/api/projects/status/t3kx0sy41ouw7cry?svg=true)](https://ci.appveyor.com/project/VertigoRay/licensemanager)
-[![downloads](https://img.shields.io/powershellgallery/dt/licensemanager.svg?label=downloads)](https://www.powershellgallery.com/packages/licensemanager)
 [![codecov](https://codecov.io/gh/UNT-CAS/LicenseManager/branch/master/graph/badge.svg)](https://codecov.io/gh/UNT-CAS/LicenseManager)
+[![version](https://img.shields.io/powershellgallery/v/licensemanager.svg)](https://www.powershellgallery.com/packages/licensemanager)
+[![downloads](https://img.shields.io/powershellgallery/dt/licensemanager.svg?label=downloads)](https://www.powershellgallery.com/packages/licensemanager)
 
 Manage concurrent usage of software that doesn't use a smarter license server, such as Flex LM.
 
@@ -21,9 +22,9 @@ This ensure that the process is always running. If it dies for some reason, we'l
 # Quick Setup
 
 1. Set the `$env:LicenseManager` Environment Variable; see [the section below](#envlicensemanager).
-1. Install `LicenseManager`: `Install-Module LicenseManager`.
-1. Import `LicenseManager`: `Import-Module LicenseManager`.
-1. Start `LicenseManager`: `Invoke-LicenseManager`.
+2. Install `LicenseManager`: `Install-Module LicenseManager`.
+3. Import `LicenseManager`: `Import-Module LicenseManager`.
+4. Start `LicenseManager`: `Invoke-LicenseManager`.
 
 ## `$env:LicenseManager`
 
