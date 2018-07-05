@@ -33,6 +33,8 @@ function Invoke-LicenseManager {
     Write-Verbose "[LicenseManager] Bound Parameters: $($MyInvocation.BoundParameters | Out-String)"
     Write-Verbose "[LicenseManager] Unbound Parameters: $($MyInvocation.UnboundParameters | Out-String)"
 
+    $psScriptRootParent = Split-Path $PSScriptRoot -Parent
+
     if (-not $LicenseManager) {
         Throw [System.Management.Automation.ParameterBindingException] 'Required Parameter (LicenseManager) is not available.'
     }
@@ -75,7 +77,7 @@ function Invoke-LicenseManager {
         This should really only be needed if the script is being restarted, but let's cover our basis.
     #>
     Write-Verbose "[LicenseManager] Intializing ..."
-    . "${PSScriptRoot}\Private\Initialize-LMEntry.ps1"
+    . "${psScriptRootParent}\Private\Initialize-LMEntry.ps1"
 
     foreach ($process in $LicenseManager.Processes.PSObject.Properties.Name) {
         Write-Verbose "[LicenseManager] Initializing Process: ${process}"
@@ -92,22 +94,22 @@ function Invoke-LicenseManager {
     <#
         Start the Background Job to watch for Processes STARTING.
     #>
-    $jobProcessStart = Start-Job -Name 'LM_ProcStart' -ScriptBlock $jobScriptBlock -ArgumentList 'Start', $PSScriptRoot, $LicenseManager
+    $jobProcessStart = Start-Job -Name 'LM_ProcStart' -ScriptBlock $jobScriptBlock -ArgumentList 'Start', $psScriptRootParent, $LicenseManager
     Write-Verbose "[LicenseManager] Started Job: LM_ProcStart (${jobProcessStart})"
 
     <#
         Start the Background Job to watch for Processes STOPPING
     #>
-    $jobProcessStop = Start-Job -Name 'LM_ProcStop' -ScriptBlock $jobScriptBlock -ArgumentList 'Stop', $PSScriptRoot, $LicenseManager
+    $jobProcessStop = Start-Job -Name 'LM_ProcStop' -ScriptBlock $jobScriptBlock -ArgumentList 'Stop', $psScriptRootParent, $LicenseManager
     Write-Verbose "[LicenseManager] Started Job: LM_ProcStop (${jobProcessStop})"
 
     <#
         This is here while developing.
         Comment this little bit out before going to production.
     #>
-    Write-Verbose "[LicenseManager] Running notepad in 3 second ..."
-    Start-Sleep -Seconds 3
-    notepad
+    # Write-Verbose "[LicenseManager] Running notepad in 3 second ..."
+    # Start-Sleep -Seconds 3
+    # notepad
 
     <#
         Keep this Process Open; k thanks

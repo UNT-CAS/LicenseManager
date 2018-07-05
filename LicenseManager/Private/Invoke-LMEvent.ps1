@@ -42,13 +42,13 @@ function Invoke-LMEvent {
     if (-not (Get-Command 'Add-LMEntry' -ErrorAction SilentlyContinue)) {
         . "${PSScriptRoot}\Add-LMEntry.ps1"
     }
-    if (-not (Get-Command 'Add-LMEntry' -ErrorAction SilentlyContinue)) {
+    if (-not (Get-Command 'Assert-LMEntry' -ErrorAction SilentlyContinue)) {
         . "${PSScriptRoot}\Assert-LMEntry.ps1"
     }
-    if (-not (Get-Command 'Add-LMEntry' -ErrorAction SilentlyContinue)) {
+    if (-not (Get-Command 'Deny-LMEntry' -ErrorAction SilentlyContinue)) {
         . "${PSScriptRoot}\Deny-LMEntry.ps1"
     }
-    if (-not (Get-Command 'Add-LMEntry' -ErrorAction SilentlyContinue)) {
+    if (-not (Get-Command 'Remove-LMEntry' -ErrorAction SilentlyContinue)) {
         . "${PSScriptRoot}\Remove-LMEntry.ps1"
     }
 
