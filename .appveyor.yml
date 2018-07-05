@@ -32,7 +32,7 @@ build_script:
 after_test:
 # Upload coverage report to Codecov.io
 - ps: |
-    & "${env:Temp}\Codecov\codecov.exe" -f .\dev\CodeCoverage.xml
+    & "${env:Temp}\Codecov\codecov.exe" -f .\dev\CodeCoverage.json
 
 
 
