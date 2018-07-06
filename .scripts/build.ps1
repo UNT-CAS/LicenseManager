@@ -186,11 +186,7 @@ Task TestModule -Description "Run Pester Tests and CoeCoverage" -Depends Install
     }
     Write-Host "[BUILD TestModule] Invoke-Pester $($invokePester | ConvertTo-Json)" -ForegroundColor Magenta
     $res = Invoke-Pester @invokePester
-    Write-Host "[BUILD TestModule] Pester Result: $($res | ConvertTo-Json)" -ForegroundColor Magenta
-    
-    Write-Host "[BUILD TestModule] Adding Results to Artifacts..." -ForegroundColor Magenta
-    # (New-Object 'System.Net.WebClient').UploadFile("https://ci.appveyor.com/api/testresults/nunit/${env:APPVEYOR_JOB_ID}", (Resolve-Path $invokePester.OutputFile))
-    Push-AppveyorArtifact (Resolve-Path $invokePester.OutputFile)
+    # Write-Host "[BUILD TestModule] Pester Result: $($res | ConvertTo-Json)" -ForegroundColor Magenta
     
     $exportCodeCovIoJson = @{
         CodeCoverage = $res.CodeCoverage
@@ -199,12 +195,14 @@ Task TestModule -Description "Run Pester Tests and CoeCoverage" -Depends Install
     }
     Write-Host "[BUILD TestModule] Export-CodeCovIoJson: $($exportCodeCovIoJson | ConvertTo-Json)" -ForegroundColor Magenta
     Export-CodeCovIoJson @exportCodeCovIoJson
-
-    Write-Host "[BUILD TestModule] Adding Results to Artifacts..." -ForegroundColor Magenta
-    Push-AppveyorArtifact (Resolve-Path $exportCodeCovIoJson.Path)
     
     Write-Host "[BUILD TestModule] Uploading CodeCov.io Report ..." -ForegroundColor Magenta
-    & "${env:Temp}\Codecov\codecov.exe" -f .\dev\CodeCoverage.json
+    & "${env:Temp}\Codecov\codecov.exe" -f $exportCodeCovIoJson.Path
+
+    Write-Host "[BUILD TestModule] Adding Results to Artifacts..." -ForegroundColor Magenta
+    # (New-Object 'System.Net.WebClient').UploadFile("https://ci.appveyor.com/api/testresults/nunit/${env:APPVEYOR_JOB_ID}", (Resolve-Path $invokePester.OutputFile))
+    Push-AppveyorArtifact (Resolve-Path $invokePester.OutputFile)
+    Push-AppveyorArtifact (Resolve-Path $exportCodeCovIoJson.Path)
 
     if ($res.FailedCount -gt 0) {
         Throw "$($res.FailedCount) tests failed."
