@@ -12,14 +12,19 @@ Because of this, we own *n* number of stand-alone licenses.
 When applicable, we can install this on as many computers as we want, such as in a VDI farm, and make it available as long as we can control concurrency.
 This is an attempt to control concurrency in these situations.
 
+This module allows processes to be counted amongst any number of computers.
+We do this to ensure that the maximum allowed concurrent run is monitored per user per computer; three users on one computer counts as three usages but three processes by one user on one computer counts as one usage.
+For you DB engineers, the primary key is computer name and user name.
+When an one more process is run over the maximum, the process is killed and the user is notified with the following message box:
+
 I prefer to run this as a scheduled task that triggers at reboot and re-runs every 15 minutes or so; that's discussed in [the *Deployment* wiki article](https://github.com/UNT-CAS/LicenseManager/wiki/Deployment).
 
 # Quick Setup
 
 1. Set the `$env:LicenseManager` Environment Variable; see [the section below](#envlicensemanager).
-2. Install `LicenseManager`: `Install-Module LicenseManager`.
-3. Import `LicenseManager`: `Import-Module LicenseManager`.
-4. Start `LicenseManager`: `Invoke-LicenseManager`.
+2. Install *LicenseManager*: `Install-Module LicenseManager`.
+3. Import *LicenseManager*: `Import-Module LicenseManager`.
+4. Start *LicenseManager*: `Invoke-LicenseManager`.
 
 ## `$env:LicenseManager`
 
