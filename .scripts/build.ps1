@@ -190,7 +190,7 @@ Task TestModule -Description "Run Pester Tests and CoeCoverage" -Depends Install
     
     Write-Host "[BUILD TestModule] Adding Results to Artifacts..." -ForegroundColor Magenta
     # (New-Object 'System.Net.WebClient').UploadFile("https://ci.appveyor.com/api/testresults/nunit/${env:APPVEYOR_JOB_ID}", (Resolve-Path $invokePester.OutputFile))
-    Push-AppveyorArtifact -FileName (Resolve-Path $invokePester.OutputFile)
+    Push-AppveyorArtifact (Resolve-Path $invokePester.OutputFile)
     
     $exportCodeCovIoJson = @{
         CodeCoverage = $res.CodeCoverage
@@ -201,7 +201,7 @@ Task TestModule -Description "Run Pester Tests and CoeCoverage" -Depends Install
     Export-CodeCovIoJson @exportCodeCovIoJson
 
     Write-Host "[BUILD TestModule] Adding Results to Artifacts..." -ForegroundColor Magenta
-    Push-AppveyorArtifact -FileName (Resolve-Path $exportCodeCovIoJson.Path)
+    Push-AppveyorArtifact (Resolve-Path $exportCodeCovIoJson.Path)
     
     Write-Host "[BUILD TestModule] Uploading CodeCov.io Report ..." -ForegroundColor Magenta
     & "${env:Temp}\Codecov\codecov.exe" -f .\dev\CodeCoverage.json
@@ -218,5 +218,5 @@ Task CompressModule -Description "Compress module for easy download from GitHub"
     Write-Host "[BUILD CompressModule] Import-Module ${env:Temp}\CodeCovIo.psm1" -ForegroundColor Magenta
     Compress-Archive -Path $script:ParentModulePath -DestinationPath "${script:ParentModulePath}.zip"
 
-    Push-AppveyorArtifact -FileName (Resolve-Path "${script:ParentModulePath}.zip")
+    Push-AppveyorArtifact (Resolve-Path "${script:ParentModulePath}.zip")
 }
