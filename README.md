@@ -15,11 +15,11 @@ This is an attempt to control concurrency in these situations.
 This module allows processes to be counted amongst any number of computers.
 We do this to ensure that the maximum allowed concurrent run is monitored per user per computer; three users on one computer counts as three usages but three processes by one user on one computer counts as one usage.
 For you DB engineers, the primary key is computer name and user name.
-When an one more process is run over the maximum, the process is killed and the user is notified with the following message box:
+When one more process is run over the maximum, the process is killed and the user is notified with the following message box:
 
 ![License Manager: Notepad](https://i.imgur.com/0eKz2tz.png)
 
-I prefer to run this as a scheduled task that triggers at reboot and re-runs every 15 minutes or so; that's discussed in [the *Deployment* wiki article](https://github.com/UNT-CAS/LicenseManager/wiki/Deployment).
+I prefer to run this as a scheduled task that triggers at boot and re-runs every 15 minutes or so; that's discussed in [the *Deployment* wiki article](https://github.com/UNT-CAS/LicenseManager/wiki/Deployment).
 
 # Quick Setup
 
