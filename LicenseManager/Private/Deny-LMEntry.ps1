@@ -171,7 +171,7 @@ objShell.Run """{0}"" {1}", 0
 
         Write-Verbose "[Deny-LMEntry][Invoke-AsUser] (Set) Unregister ScheduledTask: ${scheduledTaskName}"
         Unregister-ScheduledTask -TaskName $scheduledTaskName -Confirm:$false -Verbose
-        
+
         Write-Verbose "[Deny-LMEntry][Invoke-AsUser] (Set) Delete VBS: ${vbscriptFile}"
         Remove-Item $vbscriptFile -Force -Verbose
     } #/function private:Invoke-AsUser
@@ -205,7 +205,7 @@ WshShell.Popup "{0}", {1}, "{2}", {3}
             (Get-Date -Format 'O')
             $productName
             $ProcessConcurrentMax
-            (whoami)
+            $process.UserName
             (hostname)
             $ProcessId
             $ProcessName
