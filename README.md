@@ -12,12 +12,7 @@ Because of this, we own *n* number of stand-alone licenses.
 When applicable, we can install this on as many computers as we want, such as in a VDI farm, and make it available as long as we can control concurrency.
 This is an attempt to control concurrency in these situations.
 
-I prefer to run this as a scheduled task that triggers at reboot and re-runs every 15 minutes or so; ensures:
-
-- If it's already running, another one doesn't startup.
-- It's never forced to die after a timeout.
-
-This ensures that the process is always running. If it dies for some reason, we'll get it running again within 15 minutes
+I prefer to run this as a scheduled task that triggers at reboot and re-runs every 15 minutes or so; that's discussed in [the *Deployment* wiki article](https://github.com/UNT-CAS/LicenseManager/wiki/Deployment).
 
 # Quick Setup
 
