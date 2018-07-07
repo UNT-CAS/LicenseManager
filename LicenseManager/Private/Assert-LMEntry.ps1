@@ -65,7 +65,7 @@ function Assert-LMEntry {
         return $true
     }
 
-    $relevantJsonInfo = $jsonInfo | Where-Object { ($currentJsonInfo.ComputerName -eq $env:COMPUTERNAME) -and ($currentJsonInfo.UserName -eq $ProcessUserName) }
+    $relevantJsonInfo = $jsonInfo | Where-Object { ($jsonInfo.ComputerName -eq $env:COMPUTERNAME) -and ($jsonInfo.UserName -eq $ProcessUserName) }
     Write-Verbose "[Assert-LMEntry] Relevant JSON Info: $($relevantJsonInfo | Out-String)"
     if ($relevantJsonInfo) {
         Write-Verbose "[Assert-LMEntry] Found Relvant JSON Info. I guess we're allowed!"

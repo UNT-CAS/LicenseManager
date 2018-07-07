@@ -206,6 +206,8 @@ Task TestModule -Description "Run Pester Tests and CoeCoverage" -Depends Install
 
     if ($res.FailedCount -gt 0) {
         Throw "$($res.FailedCount) tests failed."
+        # $Host.SetShouldExit($res.FailedCount)
+        Exit $res.FailedCount
     }
 }
 
