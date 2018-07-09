@@ -197,7 +197,9 @@ Task TestModule -Description "Run Pester Tests and CoeCoverage" -Depends Install
     Export-CodeCovIoJson @exportCodeCovIoJson
     
     Write-Host "[BUILD TestModule] Uploading CodeCov.io Report ..." -ForegroundColor Magenta
+    Push-Location $script:PSScriptRootParent
     & "${env:Temp}\Codecov\codecov.exe" -f $exportCodeCovIoJson.Path
+    Pop-Location
 
     Write-Host "[BUILD TestModule] Adding Results to Artifacts..." -ForegroundColor Magenta
     # (New-Object 'System.Net.WebClient').UploadFile("https://ci.appveyor.com/api/testresults/nunit/${env:APPVEYOR_JOB_ID}", (Resolve-Path $invokePester.OutputFile))
