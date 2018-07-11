@@ -170,7 +170,8 @@ objShell.Run """{0}"" {1}", 0
         }
 
         Write-Verbose "[Deny-LMEntry][Invoke-AsUser] (Set) Unregister ScheduledTask: ${scheduledTaskName}"
-        Unregister-ScheduledTask -TaskName $scheduledTaskName -Confirm:$false -Verbose
+        # Unregister-ScheduledTask -TaskName $scheduledTaskName -Confirm:$false -Verbose
+        & SCHTASKS /Delete /TN $scheduledTaskName /F
 
         Write-Verbose "[Deny-LMEntry][Invoke-AsUser] (Set) Delete VBS: ${vbscriptFile}"
         Remove-Item $vbscriptFile -Force -Verbose
