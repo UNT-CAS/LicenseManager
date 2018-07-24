@@ -34,7 +34,7 @@ deploy:
   description: LicenseManager v$(appveyor_build_version)
   provider: GitHub
   auth_token:
-    secure: 5J0ugv6ihHcLzt2sHc0rU2F+y/htAz8nVERuqPAdnbsYEdyFBJy8POMwWYMwHU4j
+    secure: EHLdOgH35OJQ/AAj6dXn/iQ9datyBKgai5JGB+Lbh9Yaltk4wLefi2MIfGZ5N2ca
   artifact: /.*\.zip/
   draft: false
   prerelease: true
