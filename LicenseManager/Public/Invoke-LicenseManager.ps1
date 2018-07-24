@@ -5,7 +5,7 @@
         This is the MAIN script. This script watches for events and sends found events to Invoke-LMEvent for handling.
 
     .Parameter LicenseManager
-        
+
         A JSON hashtable of processes to concurrency maximum.
 
         Example: '{"DirectoryPath":"\\\\license\\LicenseManager","Processes":{"notepad.exe":5,"Calculator.exe":10}}'
@@ -49,25 +49,25 @@ function Invoke-LicenseManager {
             [Parameter(Mandatory = $true)]
             [IO.DirectoryInfo]
             $ScriptRoot,
-            
+
             [Parameter(Mandatory = $true)]
             [array]
             $LicenseManager
         )
         . "${ScriptRoot}\Private\Invoke-LMEvent.ps1"
-        
+
         $processes = $LicenseManager.Processes.PSObject.Properties.Name | ForEach-Object { "ProcessName = '${_}'" }
         $processQuery = "SELECT * FROM Win32_Process${Action}Trace WHERE $($Processes -join ' OR ')"
-        
+
         $SourceIdentifier = "LicenseManager_Process${Action}_$(New-Guid)"
         Register-CimIndicationEvent -Query $processQuery -SourceIdentifier $SourceIdentifier
-        
+
         while ($true) {
             $lmEvent = Wait-Event -SourceIdentifier $SourceIdentifier
             Write-Verbose "[LicenseManager] LM ${Action} Event: $($lmEvent | Out-String)"
-            
+
             Remove-Event -EventIdentifier $lmEvent.EventIdentifier
-            
+
             Invoke-LMEvent -Action $Action -LicenseManager $LicenseManager -LMEvent $lmEvent -Verbose
         }
     }
@@ -82,7 +82,7 @@ function Invoke-LicenseManager {
     foreach ($process in $LicenseManager.Processes.PSObject.Properties.Name) {
         Write-Verbose "[LicenseManager] Initializing Process: ${process}"
         [IO.FileInfo] $process = $process
-        
+
         $lmEntry = @{
             LicenseManager = $LicenseManager
             ProcessName    = $process.Name

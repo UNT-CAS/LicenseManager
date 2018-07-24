@@ -42,7 +42,7 @@ Describe $testFile.Name {
         }
         Mock Stop-Process {} -Verifiable
         Mock Register-ScheduledTask {} -Verifiable
-        # Mock Unregister-ScheduledTask {} -Verifiable
+        Mock Unregister-ScheduledTask {} -Verifiable
         Mock Start-ScheduledTask {
             $script:stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
         } -Verifiable
@@ -104,7 +104,7 @@ Describe $testFile.Name {
             $testCases = @(
                 @{ Name = 'Stop-Process' }
                 @{ Name = 'Register-ScheduledTask' }
-                # @{ Name = 'Unregister-ScheduledTask' }
+                @{ Name = 'Unregister-ScheduledTask' }
                 @{ Name = 'Start-ScheduledTask' }
             )
 

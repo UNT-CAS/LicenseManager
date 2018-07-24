@@ -170,8 +170,14 @@ objShell.Run """{0}"" {1}", 0
         }
 
         Write-Verbose "[Deny-LMEntry][Invoke-AsUser] (Set) Unregister ScheduledTask: ${scheduledTaskName}"
-        # Unregister-ScheduledTask -TaskName $scheduledTaskName -Confirm:$false -Verbose
-        & SCHTASKS.exe /Delete /TN $scheduledTaskName /F
+        Unregister-ScheduledTask -TaskName $scheduledTaskName -Confirm:$false -Verbose
+
+        if (-not (Get-ScheduledTask -TaskName $scheduledTaskName -ErrorAction SilentlyContinue)) {
+            $schtasks = (Get-Command 'SCHTASKS' -ErrorAction SilentlyContinue).Path
+            if ($schtasks) { # Seems AppVeyor doesn't have SCHTASKS avail.
+                & $schtasks /Delete /TN $scheduledTaskName /F
+            }
+        }
 
         Write-Verbose "[Deny-LMEntry][Invoke-AsUser] (Set) Delete VBS: ${vbscriptFile}"
         Remove-Item $vbscriptFile -Force -Verbose
