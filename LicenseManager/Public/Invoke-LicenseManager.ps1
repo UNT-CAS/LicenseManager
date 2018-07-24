@@ -27,7 +27,7 @@ function Invoke-LicenseManager {
     [OutputType([void])]
     Param(
         [Parameter()]
-        [array]
+        [string]
         $LicenseManager = $env:LicenseManager
     )
     Write-Verbose "[LicenseManager] Bound Parameters: $($MyInvocation.BoundParameters | Out-String)"
