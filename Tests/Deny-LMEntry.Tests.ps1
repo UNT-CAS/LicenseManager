@@ -1,3 +1,4 @@
+#Requires -RunAsAdministrator
 [string]           $projectDirectoryName = 'LicenseManager'
 [IO.FileInfo]      $pesterFile = [io.fileinfo] ([string] (Resolve-Path -Path $MyInvocation.MyCommand.Path))
 [IO.DirectoryInfo] $projectRoot = Split-Path -Parent $pesterFile.Directory
@@ -15,19 +16,19 @@ foreach ($example in $examples) {
         Name = $example.BaseName.Replace("$($testFile.BaseName).$verb", '').Replace('_', ' ')
     }
     Write-Verbose "Test: $($test | ConvertTo-Json)"
-    
+
     foreach ($exampleData in (Import-PowerShellDataFile -LiteralPath $example.FullName).GetEnumerator()) {
         if ($exampleData.Name -eq 'Parameters') {
             $exampleData.Value.LicenseManager.DirectoryPath = $exampleData.Value.LicenseManager.DirectoryPath.Replace('%ProjectRoot%', $projectRoot)
         }
         $test.Add($exampleData.Name, $exampleData.Value)
     }
-    
+
     Write-Verbose "Test: $($test | ConvertTo-Json)"
     $tests.Add($test) | Out-Null
 }
 
-Describe $testFile.Name {    
+Describe $testFile.Name {
     foreach ($test in $tests) {
         $tempPath = New-TemporaryFile
         Mock Write-LMEntryDenial {}
@@ -41,7 +42,7 @@ Describe $testFile.Name {
         }
         Mock Stop-Process {} -Verifiable
         Mock Register-ScheduledTask {} -Verifiable
-        Mock Unregister-ScheduledTask {} -Verifiable
+        # Mock Unregister-ScheduledTask {} -Verifiable
         Mock Start-ScheduledTask {
             $script:stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
         } -Verifiable
@@ -60,11 +61,11 @@ Describe $testFile.Name {
                 }
             }
         } -Verifiable
-        
+
         Context $test.Name {
             [hashtable] $lmEntry = $test.Parameters
             [IO.FileInfo] $jsonFilePath = '{0}\{1}.json' -f $lmEntry.LicenseManager.DirectoryPath, $lmEntry.ProcessName
-            
+
             if ($test.ExistingJson) {
                 Write-Verbose "Starting JSON required."
                 New-Item -ItemType File -Path $jsonFilePath -Force
@@ -81,15 +82,15 @@ Describe $testFile.Name {
                 Write-Verbose "Starting JSON NOT required."
                 $jsonFilePathShouldInitiallyExist = $false
             }
-    
+
             It "Confirm JSON exists (${jsonFilePathShouldInitiallyExist}): ${jsonFilePath}" {
                 Test-Path $jsonFilePath | Should Be $jsonFilePathShouldInitiallyExist
             }
-    
+
             It "Deny-LMEntry" {
                 { Deny-LMEntry @lmEntry } | Should Not Throw
             }
-    
+
             It "Confirm JSON exists (${jsonFilePathShouldInitiallyExist}): ${jsonFilePath}" {
                 Test-Path $jsonFilePath | Should Be $jsonFilePathShouldInitiallyExist
             }
@@ -103,7 +104,7 @@ Describe $testFile.Name {
             $testCases = @(
                 @{ Name = 'Stop-Process' }
                 @{ Name = 'Register-ScheduledTask' }
-                @{ Name = 'Unregister-ScheduledTask' }
+                # @{ Name = 'Unregister-ScheduledTask' }
                 @{ Name = 'Start-ScheduledTask' }
             )
 
@@ -116,12 +117,12 @@ Describe $testFile.Name {
 
                 Assert-MockCalled $Name -Times 1
             }
-            
+
             if (Test-Path $jsonFilePath) {
                 Write-Verbose "Removing temp JSON file."
                 Remove-Item -LiteralPath $jsonFilePath -Force
             }
-            
+
             if (Test-Path $tempPath) {
                 Write-Verbose "Removing temp file."
                 Remove-Item -LiteralPath $tempPath -Force

@@ -8,11 +8,11 @@
         This script will deny the user from using the program/process by:
         - Alerting the user that concurrent usage has exceeded.
         - Killing the running process.
-    
+
     .Parameter LicenseManager
-        
+
         An object, as converted from `Watch-LMEvent`'s LicenseManager Parameter.
-    
+
     .Parameter ProcessName
 
         The name of the Process, with the extension.
@@ -76,7 +76,7 @@ function Deny-LMEntry {
             [Parameter(Mandatory = $true)]
             [string]
             $User,
-            
+
             [Parameter(Mandatory = $true)]
             [string]
             $Command,
@@ -115,9 +115,9 @@ objShell.Run """{0}"" {1}", 0
         # $accessRule = New-Object System.Security.AccessControl.FileSystemAccessRule('Everyone', 'Read', 'Allow')
         # $acl.SetAccessRule($accessRule)
         # Set-Acl $vbscriptFile $acl
-        
+
         # & icacls $vbscriptFile /grant:r "Everyone":(OI)(CI)M
-        
+
         Write-Verbose "[Deny-LMEntry][Invoke-AsUser] (Set) Moving VBS/TMP file."
         Move-Item -LiteralPath $vbscriptFile -Destination $env:SystemDrive -Force -Verbose
         $vbscriptFile = "$env:SystemDrive\$($vbscriptFile.Name)"
@@ -149,7 +149,7 @@ objShell.Run """{0}"" {1}", 0
         Write-Verbose "[Deny-LMEntry][Invoke-AsUser] (Set) Start-ScheduledTask: ${scheduledTaskName}"
         Start-ScheduledTask -TaskName $scheduledTaskName | Out-String | Write-Verbose
 
-        
+
         for ($i = 100; $i -le 10000; $i + 100) {
             $scheduledTaskInfo = Get-ScheduledTaskInfo -TaskName $scheduledTaskName
             Write-Verbose "[Deny-LMEntry][Invoke-AsUser] (Set) Waiting for ScheduledTask to Run; Last Task Result: [$($scheduledTaskInfo.LastRunTime)] $($scheduledTaskInfo.LastTaskResult)"
@@ -161,7 +161,7 @@ objShell.Run """{0}"" {1}", 0
                     break
                 }
             }
-            
+
             if ($scheduledTaskInfo.LastTaskResult -eq 0) {
                 break
             } else {
@@ -171,7 +171,7 @@ objShell.Run """{0}"" {1}", 0
 
         Write-Verbose "[Deny-LMEntry][Invoke-AsUser] (Set) Unregister ScheduledTask: ${scheduledTaskName}"
         # Unregister-ScheduledTask -TaskName $scheduledTaskName -Confirm:$false -Verbose
-        & SCHTASKS /Delete /TN $scheduledTaskName /F
+        & SCHTASKS.exe /Delete /TN $scheduledTaskName /F
 
         Write-Verbose "[Deny-LMEntry][Invoke-AsUser] (Set) Delete VBS: ${vbscriptFile}"
         Remove-Item $vbscriptFile -Force -Verbose
@@ -179,16 +179,16 @@ objShell.Run """{0}"" {1}", 0
 
     [IO.FileInfo] $jsonFilePath = "$($LicenseManager.DirectoryPath)\${ProcessName}.json"
     Write-Verbose "[Deny-LMEntry] JSON File: ${jsonFilePath}"
-    
+
     $ProcessConcurrentMax = $LicenseManager.Processes.$ProcessName
     Write-Verbose "[Deny-LMEntry] Process Concurrent Max: ${ProcessConcurrentMax}"
-    
+
     $process = Get-Process -Id $ProcessId -IncludeUserName
     Write-Verbose "[Deny-LMEntry] Process: $($process | Out-String)"
 
     [IO.FileInfo] $processPath = $process.Path
     $productName = if ($processPath.VersionInfo.FileDescription) { $processPath.VersionInfo.FileDescription } elseif ($processPath.VersionInfo.ProductName) { $processPath.VersionInfo.ProductName } else { $ProcessName.BaseName }
-    
+
     $blockedAppMessage = @'
 A valid license could not be obtained by the network license manager.
 
@@ -216,14 +216,14 @@ WshShell.Popup "{0}", {1}, "{2}", {3}
         16
     )
     Write-Verbose "[Deny-LMEntry] Blocked App VBS:`n$($blockedAppVBS | Out-String)"
-    
+
     Write-Verbose "[Deny-LMEntry] Notifying User ..."
     Invoke-AsUser -User $ProcessUserName -Command $blockedAppVBS -IsVBScript
 
     Write-Verbose "[Deny-LMEntry] Stopping Process: ${ProcessId} ${process} $($process.Username)"
     Stop-Process -Id $ProcessId -Force
 
-    
+
     if (-not (Get-Command 'Write-LMEntryDenial' -ErrorAction SilentlyContinue)) {
         . "${PSScriptRoot}\Write-LMEntryDenial.ps1"
     }
@@ -231,6 +231,3 @@ WshShell.Popup "{0}", {1}, "{2}", {3}
     Write-Verbose "[Deny-LMEntry] Logging Denial..."
     Write-LMEntryDenial -LicenseManager $LicenseManager -ProcessName $ProcessName -ProcessId $ProcessId -ProcessUserName $ProcessUserName
 }
-
-
-
