@@ -28,10 +28,24 @@ function Invoke-LicenseManager {
     Param(
         [Parameter()]
         [string]
-        $LicenseManager = $env:LicenseManager
+        $LicenseManager = $env:LicenseManager,
+        
+        [Parameter()]
+        [switch]
+        $Force
     )
     Write-Verbose "[LicenseManager] Bound Parameters: $($MyInvocation.BoundParameters | Out-String)"
     Write-Verbose "[LicenseManager] Unbound Parameters: $($MyInvocation.UnboundParameters | Out-String)"
+    
+    if ($Force.IsPresent) {
+        Write-Verbose "[LicenseManager] Skipping Duplicate Process Check."
+    } else {
+        if ($proc = Get-WmiObject Win32_Process -Filter 'Name = "powershell.exe"' | Where-Object { $_.CommandLine -like '*Invoke-LicenseManager*' }) {
+            Write-Warning "Duplicate process(es) found: $($proc.ProcessId -join ', ')"
+            $proc | ForEach-Object { Write-Verbose "[LicenseManager] $($_.ProcessId): $($_.CommandLine)" }
+            Exit 1
+        }
+    }
 
     $psScriptRootParent = Split-Path $PSScriptRoot -Parent
 
