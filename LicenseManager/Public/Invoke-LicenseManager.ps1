@@ -40,7 +40,7 @@ function Invoke-LicenseManager {
     if ($Force.IsPresent) {
         Write-Verbose "[LicenseManager] Skipping Duplicate Process Check."
     } else {
-        if ($proc = Get-WmiObject Win32_Process -Filter 'Name = "powershell.exe"' | Where-Object { $_.CommandLine -like '*Invoke-LicenseManager*' }) {
+        if ($proc = Get-WmiObject Win32_Process -Filter "Name = ""powershell.exe"" AND ProcessId <> ""${PID}""" | Where-Object { $_.CommandLine -like '*Invoke-LicenseManager*' }) {
             Write-Warning "Duplicate process(es) found: $($proc.ProcessId -join ', ')"
             $proc | ForEach-Object { Write-Verbose "[LicenseManager] $($_.ProcessId): $($_.CommandLine)" }
             Exit 1
